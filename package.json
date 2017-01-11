@@ -1,0 +1,40 @@
+{
+  "name": "zendesk-pipeline",
+  "version": "0.0.1",
+  "description": "A script for publishing .md articles, stored in git repo, on ZenDesk",
+  "main": "index.js",
+  "engines": {
+    "node": ">= 4.0.0"
+  },
+  "keywords": [
+    "zendesk",
+    "pipeline",
+    "git",
+    "publish",
+    "documentation",
+    "docs",
+    "markdown"
+  ],
+  "authors": [
+    "ilia.isupov@rakuten.com",
+    "cory.caywood@rakuten.com"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "lint": "eslint .",
+    "test": "istanbul test _mocha -- --recursive test/",
+    "precommit": "npm run lint",
+    "preversion": "npm run lint && npm test"
+  },
+  "dependencies": {
+    "lodash": "^4.17.4"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "chai-as-promised": "^6.0.0",
+    "istanbul": "^0.4.5",
+    "mocha": "^3.2.0",
+    "sinon": "^1.17.7",
+    "sinon-chai": "^2.8.0"
+  }
+}
