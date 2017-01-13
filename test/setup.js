@@ -1,5 +1,8 @@
 'use strict';
 
+require('any-promise/register/bluebird'); // Registering bluebird as default promises
+require('mock-fs'); //make sure it's called before tests
+
 const chai = require('chai');
 const Promise = require('bluebird');
 

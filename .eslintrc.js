@@ -4,6 +4,9 @@ module.exports = {
         es6: true,
         node: true
     },
+    "parserOptions": {
+        "sourceType": "module",
+    },
     rules: {
         'array-bracket-spacing': ['error', 'never'],
         'brace-style': ['error', '1tbs', {allowSingleLine: false}],
