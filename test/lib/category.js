@@ -1,4 +1,6 @@
 const mockFs = require('mock-fs');
+const Promise = require('bluebird');
+const Section = require('../../lib/section');
 const Category = require('../../lib/category');
 
 describe('Category', () => {
@@ -23,7 +25,14 @@ describe('Category', () => {
     });
 
     describe('read', () => {
+        const sandbox = sinon.sandbox.create();
+
+        beforeEach(() => {
+            sandbox.stub(Section.prototype, 'read').returns(Promise.resolve());
+        });
+
         afterEach(() => {
+            sandbox.restore();
             mockFs.restore();
         });
 
@@ -37,6 +46,35 @@ describe('Category', () => {
             return category.read()
                 .then(() => {
                     expect(category.meta).to.be.eql({foo: 'bar'});
+                });
+        });
+
+        it('should create section for each subfolder in section dir', () => {
+            mockFs({
+                'meta.json': '{"foo":"bar"}',
+                'section': {},
+                'another_section': {}
+            });
+
+            const category = new Category('.');
+
+            return category.read()
+                .then(() => {
+                    expect(category.sections).to.have.length(2); // TODO: verify that created sections are exactly `section` and `another_section`
+                });
+        });
+
+        it('should start reading contents of each child section', () => {
+            mockFs({
+                'meta.json': '{"foo":"bar"}',
+                'section': {}
+            });
+
+            const category = new Category('.');
+
+            return category.read()
+                .then(() => {
+                    expect(Section.prototype.read).to.be.calledOnce;
                 });
         });
     });
