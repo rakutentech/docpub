@@ -40,23 +40,6 @@ describe('Document', () => {
                 });
         });
 
-        it('should resolve with paths to subfolders', () => {
-            mockFs({
-                'meta.json': '{"foo":"bar"}',
-                'folder': {},
-                'another_folder': {}
-            });
-
-            const document = new Document('.');
-
-            return document.read()
-                .then((paths) => {
-                    expect(paths).to.have.length(2)
-                        .and.to.include('folder')
-                        .and.to.include('another_folder');
-                });
-        });
-
         it('should reject if was unable to find metadata file named `meta.json`', () => {
             mockFs({
                 'wrong.meta.json': '{"foo":"bar"}'

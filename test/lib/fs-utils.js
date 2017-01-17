@@ -154,4 +154,141 @@ describe('fs-utils', () => {
             });
         });
     });
+
+    describe('findFilesOfTypes', () => {
+        it('should reject if types to look for are not passed', () => {
+            return expect(fsu.findFilesOfTypes('dir'))
+                .to.be.rejectedWith(/not defined/);
+        });
+
+        it('should reject if source dir name is not specified', () => {
+            return expect(fsu.findFilesOfTypes(undefined, ['.ext']))
+                .to.be.rejectedWith(/Source path/);
+        });
+
+        it('should reject if source dir name is not string', () => {
+            return expect(fsu.findFilesOfTypes({}, ['.ext']))
+                .to.be.rejectedWith(/Source path/);
+        });
+
+        it('should find files by extension', () => {
+            mockFs({
+                dir: {
+                    'file.foo': 'content'
+                }
+            });
+
+            return fsu.findFilesOfTypes('dir', ['.foo'])
+                .then(files => {
+                    expect(files['foo']).to.have.length(1);
+                    expect(files['foo'][0]).to.match(/file.foo/);
+                });
+        });
+
+        it('should prepend file names with source dir path', () => {
+            mockFs({
+                dir: {
+                    'file.foo': 'content'
+                }
+            });
+
+            return fsu.findFilesOfTypes('dir', ['.foo'])
+                .then(files => {
+                    const file = files['foo'][0];
+
+                    expect(file).to.match(/^dir/);
+                });
+        });
+
+        it('should group files by extensions', () => {
+            mockFs({
+                dir: {
+                    'file.foo': 'content',
+                    'file.bar': 'content'
+                }
+            });
+
+            return fsu.findFilesOfTypes('dir', ['.foo', '.bar'])
+                .then(files => {
+                    expect(files).to.be.eql({
+                        foo: ['dir/file.foo'],
+                        bar: ['dir/file.bar']
+                    });
+                });
+        });
+
+        it('should not include files of extensions different from required', () => {
+            mockFs({
+                dir: {
+                    'file.bar': 'content'
+                }
+            });
+
+            return fsu.findFilesOfTypes('dir', ['.foo'])
+                .then(files => {
+                    expect(files).to.not.have.property('bar');
+                });
+        });
+
+        it('should skip directories having matching extension in name', () => {
+            mockFs({
+                dir: {
+                    'another_dir.foo': {}
+                }
+            });
+
+            return fsu.findFilesOfTypes('dir', ['.foo'])
+                .then(files => {
+                    expect(files).to.not.have.property('foo');
+                });
+        });
+
+        it('should support single extension passed as string', () => {
+            mockFs({
+                dir: {
+                    'file.foo': 'content'
+                }
+            });
+
+            return expect(fsu.findFilesOfTypes('dir', '.foo'))
+                .to.eventually.become({
+                    'foo': ['dir/file.foo']
+                });
+        });
+
+        it('should support extensions passed as string not beginning with dot', () => {
+            mockFs({
+                dir: {
+                    'file.foo': 'content'
+                }
+            });
+
+            return expect(fsu.findFilesOfTypes('dir', 'foo'))
+                .to.eventually.become({
+                    'foo': ['dir/file.foo']
+                });
+        });
+
+        it('should ignore empty strings in extensions', () => {
+            mockFs({
+                dir: {
+                    'file.foo': 'content'
+                }
+            });
+
+            return expect(fsu.findFilesOfTypes('dir', ['']))
+                .to.eventually.become({});
+        });
+
+        it('should ignore extensions passed as non-string extensions', () => {
+            mockFs({
+                dir: {
+                    'file.foo': 'content'
+                }
+            });
+
+            return expect(fsu.findFilesOfTypes('dir', {}))
+                .to.eventually.become({});
+        });
+    });
 });

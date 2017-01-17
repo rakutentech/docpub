@@ -27,10 +27,6 @@ describe('Category', () => {
     describe('read', () => {
         const sandbox = sinon.sandbox.create();
 
-        beforeEach(() => {
-            sandbox.stub(Section.prototype, 'read').returns(Promise.resolve());
-        });
-
         afterEach(() => {
             sandbox.restore();
             mockFs.restore();
@@ -49,11 +45,11 @@ describe('Category', () => {
                 });
         });
 
-        it('should create section for each subfolder in section dir', () => {
+        it('should create section for each subfolder in category dir', () => {
             mockFs({
                 'meta.json': '{"foo":"bar"}',
-                'section': {},
-                'another_section': {}
+                'section': {'meta.json': '{"foo":"bar"}'},
+                'another_section': {'meta.json': '{"foo":"bar"}'}
             });
 
             const category = new Category('.');
@@ -67,14 +63,16 @@ describe('Category', () => {
         it('should start reading contents of each child section', () => {
             mockFs({
                 'meta.json': '{"foo":"bar"}',
-                'section': {}
+                'section': {'meta.json': '{"foo":"bar"}'},
+                'another_section': {'meta.json': '{"foo":"bar"}'}
             });
+            sandbox.stub(Section.prototype, 'read').returns(Promise.resolve());
 
             const category = new Category('.');
 
             return category.read()
                 .then(() => {
-                    expect(Section.prototype.read).to.be.calledOnce;
+                    expect(Section.prototype.read).to.be.calledTwice;
                 });
         });
     });
