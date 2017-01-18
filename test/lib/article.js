@@ -3,8 +3,16 @@ const mockFs = require('mock-fs');
 const Article = require('../../lib/article');
 const Section = require('../../lib/section');
 const fsu = require('../../lib/fs-utils.js');
+const MarkdownRenderer = require('../../lib/md-renderer');
 
 describe('Article', () => {
+    const sandbox = sinon.sandbox.create();
+
+    afterEach(() => {
+        sandbox.restore();
+        mockFs.restore();
+    });
+
     describe('constructor', () => {
         it('should throw if path is not defined', () => {
             const path = null;
@@ -30,13 +38,6 @@ describe('Article', () => {
     });
 
     describe('read', () => {
-        const sandbox = sinon.sandbox.create();
-
-        afterEach(() => {
-            sandbox.restore();
-            mockFs.restore();
-        });
-
         it('should load metadata from file named `meta.json`', () => {
             mockFs({
                 'meta.json': '{"foo":"bar"}',
@@ -218,6 +219,69 @@ describe('Article', () => {
                     });
                 });
         });
+    });
+    describe('convertMarkdown', () => {
+        it('should reject if article contents were not yet read', () => {
+            const article = createArticle_();
+
+            return expect(article.convertMarkdown())
+                .to.be.rejectedWith(/No path to markdown/);
+        });
+
+        it('should reject if failed to read markdown file', () => {
+            const unaccessibleMdFile = mockFs.file({
+                content: '# Header',
+                mode: 0
+            });
+
+            return expect(convertMarkdown_(unaccessibleMdFile))
+                .to.be.rejectedWith(/EACCES, permission denied \'content.md\'/);
+        });
+
+        it('should reject if failed to convert markdown', () => {
+            sandbox.stub(MarkdownRenderer.prototype, 'render')
+                .rejects(new Error('convertion failed'));
+
+            return convertMarkdown_()
+                .catch(e => {
+                    expect(e.message).to.match(/convertion failed/);
+                });
+        });
+
+        it('should convert markdown to html', () => {
+            return expect(convertMarkdown_('# Header'))
+                .to.eventually.become('<h1>Header</h1>\n');
+        });
+
+        it('should reuse results of previous conversion on subsequent calls', () => {
+            mockFs({
+                'meta.json': '{"foo":"bar"}',
+                'content.md': '# Header'
+            });
+            sandbox.spy(MarkdownRenderer.prototype, 'render');
+
+            const article = createArticle_();
+
+            return article.read()
+                .then(() => article.convertMarkdown())
+                .then(() => article.convertMarkdown())
+                .then(() => {
+                    expect(MarkdownRenderer.prototype.render)
+                        .to.be.calledOnce;
+                });
+        });
+
+        function convertMarkdown_(markdown) {
+            mockFs({
+                'meta.json': '{"foo":"bar"}',
+                'content.md': markdown || '# Header'
+            });
+
+            const article = createArticle_();
+
+            return article.read()
+                .then(() => article.convertMarkdown());
+        }
     });
 });
 
