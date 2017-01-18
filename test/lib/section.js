@@ -1,7 +1,9 @@
+const _ = require('lodash');
 const Promise = require('bluebird');
 const mockFs = require('mock-fs');
 const Section = require('../../lib/section');
 const Article = require('../../lib/article');
+const Category = require('../../lib/category');
 
 describe('Section', () => {
     describe('constructor', () => {
@@ -17,8 +19,12 @@ describe('Section', () => {
             expect(() => new Section(path)).to.throw(/string/);
         });
 
+        it('should throw if parent category is not passed', () => {
+            expect(() => new Section('.')).to.throw(/Missing parent category/);
+        });
+
         it('should set section type as `section`', () => {
-            const category = new Section('some_path');
+            const category = createSection_();
 
             expect(category.type).to.be.eql('section');
         });
@@ -41,7 +47,7 @@ describe('Section', () => {
                 'meta.json': '{"foo":"bar"}'
             });
 
-            const section = new Section('.');
+            const section = createSection_();
 
             return section.read()
                 .then(() => {
@@ -56,7 +62,7 @@ describe('Section', () => {
                 'another_article': {}
             });
 
-            const section = new Section('.');
+            const section = createSection_();
 
             return section.read()
                 .then(() => {
@@ -71,12 +77,37 @@ describe('Section', () => {
                 'another_article': {}
             });
 
-            const section = new Section('.');
+            const section = createSection_();
 
             return section.read()
                 .then(() => {
                     expect(Article.prototype.read).to.be.calledTwice;
                 });
         });
+
+        it('should link child article with itself', () => {
+            mockFs({
+                'meta.json': '{"foo":"bar"}',
+                'article': {}
+            });
+
+            const section = createSection_();
+
+            return section.read()
+                .then(() => {
+                    const child = section.articles[0];
+
+                    expect(child.section).to.be.equal(section);
+                });
+        });
     });
 });
+
+function createSection_(opts) {
+    opts = _.defaults(opts || {}, {
+        path: '.',
+        category: sinon.createStubInstance(Category)
+    });
+
+    return new Section(opts.path, opts.category);
+}

@@ -1,5 +1,7 @@
+const _ = require('lodash');
 const mockFs = require('mock-fs');
 const Article = require('../../lib/article');
+const Section = require('../../lib/section');
 const fsu = require('../../lib/fs-utils.js');
 
 describe('Article', () => {
@@ -16,8 +18,12 @@ describe('Article', () => {
             expect(() => new Article(path)).to.throw(/string/);
         });
 
+        it('should throw if parent section is not passed', () => {
+            expect(() => new Article('.')).to.throw(/Missing section/);
+        });
+
         it('should set article type as `article`', () => {
-            const category = new Article('some_path');
+            const category = createArticle_();
 
             expect(category.type).to.be.eql('article');
         });
@@ -37,7 +43,7 @@ describe('Article', () => {
                 'content.md': `content_goes_here`
             });
 
-            const article = new Article('.');
+            const article = createArticle_();
 
             return article.read()
                 .then(() => {
@@ -52,7 +58,7 @@ describe('Article', () => {
             });
             sandbox.spy(fsu, 'findFilesOfTypes').named('findFilesOfTypes');
 
-            const article = new Article('.');
+            const article = createArticle_();
 
             return article.read()
                 .then(() => {
@@ -65,7 +71,7 @@ describe('Article', () => {
                 'meta.json': '{"foo":"bar"}'
             });
 
-            const article = new Article('.');
+            const article = createArticle_();
 
             return expect(article.read())
                 .to.be.rejectedWith(/No markdown files/);
@@ -78,7 +84,7 @@ describe('Article', () => {
                 'more_content.md': `content_goes_here`
             });
 
-            const article = new Article('.');
+            const article = createArticle_();
 
             return expect(article.read())
                 .to.be.rejectedWith(/more than 1 markdown/);
@@ -91,7 +97,7 @@ describe('Article', () => {
                 'image.jpg': 'image_bytes_here'
             });
 
-            const article = new Article('.');
+            const article = createArticle_();
 
             return article.read()
                 .then(() => {
@@ -108,7 +114,7 @@ describe('Article', () => {
                 'image.jpeg': 'image_bytes_here'
             });
 
-            const article = new Article('.');
+            const article = createArticle_();
 
             return article.read()
                 .then(() => {
@@ -125,7 +131,7 @@ describe('Article', () => {
                 'image.png': 'image_bytes_here'
             });
 
-            const article = new Article('.');
+            const article = createArticle_();
 
             return article.read()
                 .then(() => {
@@ -142,7 +148,7 @@ describe('Article', () => {
                 'image.pdf': 'image_bytes_here'
             });
 
-            const article = new Article('.');
+            const article = createArticle_();
 
             return article.read()
                 .then(() => {
@@ -162,7 +168,7 @@ describe('Article', () => {
                 'image.pdf': 'image_bytes_here'
             });
 
-            const article = new Article('.');
+            const article = createArticle_();
 
             return article.read()
                 .then(() => {
@@ -176,3 +182,12 @@ describe('Article', () => {
         });
     });
 });
+
+function createArticle_(opts) {
+    opts = _.defaults(opts || {}, {
+        path: '.',
+        section: sinon.createStubInstance(Section)
+    });
+
+    return new Article(opts.path, opts.section);
+}
