@@ -81,7 +81,7 @@ describe('Documentation directory reading', () => {
                     const bufferArg = MarkdownRenderer.prototype.render
                         .lastCall.args[0];
 
-                    expect(bufferArg).to.be.eql(Buffer('# Content in markdown\n'));
+                    expect(bufferArg).to.be.eql(Buffer('Content in markdown\n'));
                 });
         });
     });

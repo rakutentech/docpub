@@ -29,17 +29,17 @@ describe('MarkdownRenderer', () => {
         });
 
         it('should render markdown passed as string', () => {
-            const markdown = '# Header';
+            const markdown = 'Header';
             const html = mdRenderer.render(markdown);
 
-            expect(html).to.be.eql('<h1>Header</h1>\n');
+            expect(html).to.be.eql('<p>Header</p>\n');
         });
 
         it('should render markdown passed as Buffer', () => {
-            const markdown = new Buffer('# Header');
+            const markdown = new Buffer('Header');
             const html = mdRenderer.render(markdown);
 
-            expect(html).to.be.eql('<h1>Header</h1>\n');
+            expect(html).to.be.eql('<p>Header</p>\n');
         });
 
         it('should throw if exception during renderer occured', () => {
@@ -55,6 +55,71 @@ describe('MarkdownRenderer', () => {
             const expected = `<pre><code class="language-javascript"> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">foo</span>(<span class="hljs-params"></span>) </span>{}\n</code></pre>\n`;
 
             expect(html).to.be.eql(expected);
+        });
+
+        it('should disable `_` for `<em>` in code block', () => {
+            const markdown = '`_variable_`';
+            const html = mdRenderer.render(markdown);
+
+            expect(html).to.not.include('<em>')
+                .and.to.not.include('</em>');
+        });
+
+        it('should disable `__` for `<strong>` in code block', () => {
+            const markdown = '`__variable__`';
+            const html = mdRenderer.render(markdown);
+
+            expect(html).to.not.include('<strong>')
+                .and.to.not.include('</strong>');
+        });
+
+        it('should generate table of contents from headings if found `[toc]` entry in document', () => {
+            const markdown = '[toc]\n';
+            const html = mdRenderer.render(markdown);
+
+            expect(html).to.include('<ul class="markdownIt-TOC">');
+        });
+
+        it('should not include `h1` headers to ToC', () => {
+            const markdown = '[toc]\n# Heading';
+            const html = mdRenderer.render(markdown);
+
+            expect(html).to.not.include('<a href="#heading">Heading</a>');
+        });
+
+        it('should include h2 headers to ToC', () => {
+            const markdown = '[toc]\n## Heading';
+            const html = mdRenderer.render(markdown);
+
+            expect(html).to.include('<a href="#heading">Heading</a>');
+        });
+
+        it('should include h3 headers to ToC', () => {
+            const markdown = '[toc]\n### Heading';
+            const html = mdRenderer.render(markdown);
+
+            expect(html).to.include('<a href="#heading">Heading</a>');
+        });
+
+        it('should include h4 headers to ToC', () => {
+            const markdown = '[toc]\n#### Heading';
+            const html = mdRenderer.render(markdown);
+
+            expect(html).to.include('<a href="#heading">Heading</a>');
+        });
+
+        it('should include h5 headers to ToC', () => {
+            const markdown = '[toc]\n##### Heading';
+            const html = mdRenderer.render(markdown);
+
+            expect(html).to.include('<a href="#heading">Heading</a>');
+        });
+
+        it('should include h6 headers to ToC', () => {
+            const markdown = '[toc]\n###### Heading';
+            const html = mdRenderer.render(markdown);
+
+            expect(html).to.include('<a href="#heading">Heading</a>');
         });
     });
 });

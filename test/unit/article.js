@@ -230,7 +230,7 @@ describe('Article', () => {
 
         it('should reject if failed to read markdown file', () => {
             const unaccessibleMdFile = mockFs.file({
-                content: '# Header',
+                content: 'Header',
                 mode: 0
             });
 
@@ -249,8 +249,8 @@ describe('Article', () => {
         });
 
         it('should convert markdown to html', () => {
-            return expect(convertMarkdown_('# Header'))
-                .to.eventually.become('<h1>Header</h1>\n');
+            return expect(convertMarkdown_('Header'))
+                .to.eventually.become('<p>Header</p>\n');
         });
 
         it('should reuse results of previous conversion on subsequent calls', () => {

@@ -32,6 +32,7 @@
     "highlight.js": "^9.9.0",
     "lodash": "^4.17.4",
     "markdown-it": "^8.2.2",
+    "markdown-it-github-toc": "^3.1.0",
     "node-zendesk": "^1.1.12"
   },
   "devDependencies": {
