@@ -31,11 +31,13 @@
     "fs-promise": "^1.0.0",
     "highlight.js": "^9.9.0",
     "lodash": "^4.17.4",
-    "markdown-it": "^8.2.2"
+    "markdown-it": "^8.2.2",
+    "node-zendesk": "^1.1.12"
   },
   "devDependencies": {
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
+    "dotenv": "^4.0.0",
     "eslint": "^3.13.1",
     "istanbul": "^0.4.5",
     "mocha": "^3.2.0",

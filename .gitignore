@@ -14,6 +14,8 @@ logs
 results
 build
 .grunt
+.vscode
+.env
 
 node_modules
 /coverage
