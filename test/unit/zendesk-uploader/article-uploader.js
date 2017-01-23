@@ -55,6 +55,7 @@ describe('ArticleUploader', () => {
         delete process.env.ZENDESK_API_USERNAME;
         delete process.env.ZENDESK_API_TOKEN;
         delete process.env.ZENDESK_URL;
+        delete process.env.ZENDESK_API_LOCALE;
         delete this.article;
         delete this.response;
         delete this.requestMatcher;
@@ -110,25 +111,8 @@ describe('ArticleUploader', () => {
             return expect(uploader.upload()).to.be.rejectedWith(/`title` is missing from the metadata/);
         });
 
-        it('should use the passed in zendesk client to upload if one was passed with the constructor', () => {
-            const client = zendesk.createClient({
-                username: 'username',
-                token: 'token',
-                remoteUri: 'uri',
-                helpcenter: true,
-                disableGlobalState: true
-            });
-            sandbox.stub(client.articles, 'create').yields(null, null, this.response);
-            const uploader = new ArticleUploader(this.article, client);
-            return uploader.upload()
-                .then(() => {
-                    expect(client.articles.create).to.have.been.called;
-                });
-        });
-
         it('should reject with an error if section id is not defined', () => {
             delete this.article.section.meta.id;
-            sandbox.stub(this.zendeskClient.articles, 'create').yields(null, null, {});
             const uploader = new ArticleUploader(this.article, this.zendeskClient);
             return expect(uploader.upload()).to.be.rejectedWith(/`id` is missing from this articles section metadata/);
         });
@@ -169,7 +153,23 @@ describe('ArticleUploader', () => {
                 });
         });
 
-        it('should set US English to the request `locale` if one is not provided', () => {
+        it('should set the `locale` environment variable to the request if one was not provided', () => {
+            delete this.article.meta.locale;
+            process.env.ZENDESK_API_LOCALE = 'test-locale';
+            this.requestMatcher.article.locale = 'test-locale';
+            sandbox.stub(this.zendeskClient.articles, 'create').yields(null, null, this.response);
+            const uploader = new ArticleUploader(this.article, this.zendeskClient);
+            return uploader.upload()
+                .then(() => {
+                    expect(this.zendeskClient.articles.create).to.have.been.calledWith(
+                        sinon.match.any,
+                        this.requestMatcher,
+                        sinon.match.any
+                    );
+                });
+        });
+
+        it('should set US English to the request `locale` if one is not provided and the environment variable is not set', () => {
             delete this.article.meta.locale;
             this.requestMatcher.article.locale = 'en-us';
             sandbox.stub(this.zendeskClient.articles, 'create').yields(null, null, this.response);
