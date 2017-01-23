@@ -22,6 +22,12 @@ describe('MarkdownRenderer', () => {
             expect(mdRenderer.render('')).to.be.eql('');
         });
 
+        it('should throw if markdown passed not as string or Buffer', () => {
+            const markdown = {};
+
+            expect(() => mdRenderer.render(markdown)).to.throw(/string or Buffer/);
+        });
+
         it('should render markdown passed as string', () => {
             const markdown = '# Header';
             const html = mdRenderer.render(markdown);
