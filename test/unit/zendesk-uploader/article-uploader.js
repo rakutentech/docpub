@@ -40,13 +40,12 @@ describe('ArticleUploader', () => {
             'comments_disabled': true,
             'section_id': 206096068
         };
-
         this.requestMatcher = {
             article: {
                 title: sinon.match.any,
                 position: sinon.match.any,
                 locale: sinon.match.any,
-                label_names: sinon.match.any,
+                'label_names': sinon.match.any,
                 body: sinon.match.any
             }
         };
@@ -65,7 +64,9 @@ describe('ArticleUploader', () => {
         it('should not initialize an instance of zendesk client if one was already passed with the constructor', () => {
             let zendeskClient = sinon.stub().returns({});
             sandbox.spy(zendesk, 'createClient');
-            const uploader = new ArticleUploader(this.article, zendeskClient);
+            /*eslint-disable no-new*/
+            new ArticleUploader(this.article, zendeskClient);
+            /*eslint-enable no-new*/
             expect(zendesk.createClient).to.not.have.been.called;
         });
 
@@ -87,7 +88,9 @@ describe('ArticleUploader', () => {
         it('should remove trailing slashes from the provided zendesk URI', () => {
             process.env.ZENDESK_URL = 'http://www.url.com//';
             sandbox.spy(zendesk, 'createClient');
-            let uploader = new ArticleUploader(this.article);
+            /*eslint-disable no-new*/
+            new ArticleUploader(this.article);
+            /*eslint-enable no-new*/
             expect(zendesk.createClient).to.have.been.calledWith({
                 username: sinon.match.any,
                 token: sinon.match.any,
@@ -213,7 +216,7 @@ describe('ArticleUploader', () => {
 
         it('should convert a string of comma seperated labels to an array', () => {
             this.article.meta.labels = 'label1, label2, label3';
-            this.requestMatcher.article.label_names = ['label1', 'label2', 'label3'];
+            this.requestMatcher.article['label_names'] = ['label1', 'label2', 'label3'];
             sandbox.stub(this.zendeskClient.articles, 'create').yields(null, null, this.response);
             const uploader = new ArticleUploader(this.article, this.zendeskClient);
             return uploader.upload()
@@ -247,4 +250,3 @@ describe('ArticleUploader', () => {
         });
     });
 });
-

@@ -17,9 +17,11 @@ describe('Uploader', () => {
 
     describe('constructor', () => {
         it('should not initialize an instance of zendesk client if one was already passed with the constructor', () => {
-            let zendeskClient = sinon.stub().returns({});
+            const zendeskClient = sinon.stub().returns({});
             sandbox.spy(zendesk, 'createClient');
-            let uploader = new Uploader({meta: {}}, zendeskClient);
+            /*eslint-disable no-new*/
+            new Uploader({meta: {}}, zendeskClient);
+            /*eslint-enable no-new*/
             expect(zendesk.createClient).to.not.have.been.called;
         });
 
@@ -41,7 +43,9 @@ describe('Uploader', () => {
         it('should remove trailing slashes from the provided zendesk URI', () => {
             process.env.ZENDESK_URL = 'http://www.url.com//';
             sandbox.spy(zendesk, 'createClient');
-            let uploader = new Uploader({meta: {}});
+            /*eslint-disable no-new*/
+            new Uploader({meta: {}});
+            /*eslint-enable no-new*/
             expect(zendesk.createClient).to.have.been.calledWith({
                 username: sinon.match.any,
                 token: sinon.match.any,
@@ -68,4 +72,3 @@ describe('Uploader', () => {
         });
     });
 });
-
