@@ -40,6 +40,7 @@ describe('SectionUploader', () => {
             },
             html: '<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>'
         };
+        this.article1.convertMarkdown = sinon.stub().returns(Promise.resolve());
         this.article2 = {
             section: this.section,
             meta: {
@@ -50,6 +51,7 @@ describe('SectionUploader', () => {
             },
             html: '<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>'
         };
+        this.article2.convertMarkdown = sinon.stub().returns(Promise.resolve());
         this.section.articles.push(this.article1, this.article2);
 
         this.sectionResponse = {

@@ -31,6 +31,7 @@ describe('ArticleUploader', () => {
             },
             html: '<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>'
         };
+        this.article.convertMarkdown = sinon.stub().returns(Promise.resolve());
 
         this.response = {
             id: 37486578,
@@ -217,6 +218,22 @@ describe('ArticleUploader', () => {
         it('should convert a string of comma seperated labels to an array', () => {
             this.article.meta.labels = 'label1, label2, label3';
             this.requestMatcher.article['label_names'] = ['label1', 'label2', 'label3'];
+            sandbox.stub(this.zendeskClient.articles, 'create').yields(null, null, this.response);
+            const uploader = new ArticleUploader(this.article, this.zendeskClient);
+            return uploader.upload()
+                .then(() => {
+                    expect(this.zendeskClient.articles.create).to.have.been.calledWith(
+                        sinon.match.any,
+                        this.requestMatcher,
+                        sinon.match.any
+                    );
+                });
+        });
+
+        it('should set the `html` request property to the converted html', () => {
+            const html = '<h1>Test Text Goes Here</h1>';
+            this.article.convertMarkdown = sandbox.stub().returns(Promise.resolve(html));
+            this.requestMatcher.article.body = html;
             sandbox.stub(this.zendeskClient.articles, 'create').yields(null, null, this.response);
             const uploader = new ArticleUploader(this.article, this.zendeskClient);
             return uploader.upload()
