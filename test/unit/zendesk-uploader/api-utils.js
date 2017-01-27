@@ -58,9 +58,7 @@ describe('api-utils', () => {
     describe('setSectionAccessPolicy', () => {
         beforeEach(() => {
             this.policy = {
-                access: {
-                    viewableBy: 'staff'
-                }
+                viewableBy: 'staff'
             };
             this.response = {
                 'access_policy': {
@@ -101,22 +99,8 @@ describe('api-utils', () => {
                 .to.become();
         });
 
-        it('should fulfill a promise and return nothing if the access policy has no valid properties', () => {
-            const params = {
-                sectionId: 123,
-                meta: {
-                    access: {
-                        someRandomProperty: 'value'
-                    }
-                }
-            };
-
-            return expect(apiUtils.setSectionAccessPolicy(params, this.zendeskClient))
-                .to.become();
-        });
-
         it('should set the `viewable_by` property to the request if it was available', () => {
-            this.policy.access.viewableBy = 'everyone';
+            this.policy.viewableBy = 'everyone';
             const params = {
                 sectionId: 123,
                 meta: this.policy
@@ -135,7 +119,7 @@ describe('api-utils', () => {
         });
 
         it('should set the `manageable_by` property to the request if it was available', () => {
-            this.policy.access.manageableBy = 'everyone';
+            this.policy.manageableBy = 'everyone';
             const params = {
                 sectionId: 123,
                 meta: this.policy
