@@ -54,7 +54,7 @@ describe('CategoryUploader', () => {
             };
             this.categoryStub.yields(error);
             const uploader = new CategoryUploader(category, this.zendeskClient);
-            
+
             return expect(uploader.upload()).to.be.rejectedWith(error);
         });
 
@@ -212,7 +212,7 @@ describe('CategoryUploader', () => {
             const error = {error: 'error'};
             this.sectionStub.yields(error);
             const uploader = new CategoryUploader(category, this.zendeskClient);
-            
+
             return expect(uploader.upload()).to.be.rejectedWith(error);
         });
     });
