@@ -7,7 +7,7 @@
     "node": ">= 4.0.0"
   },
   "bin": {
-    "pipeline": "./bin/zendesk-pipeline"
+    "zendesk-pipeline": "./bin/zendesk-pipeline.js"
   },
   "keywords": [
     "zendesk",
@@ -44,6 +44,7 @@
     "chai-as-promised": "^6.0.0",
     "dotenv": "^4.0.0",
     "eslint": "^3.13.1",
+    "husky": "^0.13.1",
     "istanbul": "^0.4.5",
     "mocha": "^3.2.0",
     "mock-fs": "^3.12.1",
