@@ -7,7 +7,7 @@ describe('SectionUploader', () => {
     beforeEach(() => {
         this.zendeskClient = sandbox.stub();
         this.zendeskClient.sections = {
-            create: sandbox.stub().yields(null, null, {id: 123456, position: 2})
+            create: sandbox.stub().returns(Promise.resolve({id: 123456, position: 2}))
         };
         this.createArticleStub = sandbox.stub(ArticleUploader.prototype, 'upload').returns(Promise.resolve());
     });
@@ -38,7 +38,7 @@ describe('SectionUploader', () => {
             let error = {
                 error: 'error message'
             };
-            this.zendeskClient.sections.create.yields(error);
+            this.zendeskClient.sections.create.returns(Promise.reject(error));
             const uploader = new SectionUploader(testUtils.createSection(), this.zendeskClient);
 
             return expect(uploader.upload())
@@ -143,7 +143,7 @@ describe('SectionUploader', () => {
                     description: 'description'
                 }
             });
-            this.zendeskClient.sections.create.yields(null, null, {id: 123456, position: 42});
+            this.zendeskClient.sections.create.returns(Promise.resolve({id: 123456, position: 42}));
             const uploader = new SectionUploader(section, this.zendeskClient);
 
             return expect(uploader.upload()).to.eventually.become({
@@ -157,7 +157,7 @@ describe('SectionUploader', () => {
 
         it('should set the returned section id to the meta property', () => {
             const section = testUtils.createSection();
-            this.zendeskClient.sections.create.yields(null, null, {id: 123456, position: 42});
+            this.zendeskClient.sections.create.returns(Promise.resolve({id: 123456, position: 42}));
             const uploader = new SectionUploader(section, this.zendeskClient);
 
             return uploader.upload()
@@ -169,7 +169,7 @@ describe('SectionUploader', () => {
 
         it('should set the returned section position to the meta property', () => {
             const section = testUtils.createSection();
-            this.zendeskClient.sections.create.yields(null, null, {id: 123456, position: 454});
+            this.zendeskClient.sections.create.returns(Promise.resolve({id: 123456, position: 454}));
             const uploader = new SectionUploader(section, this.zendeskClient);
 
             return uploader.upload()
@@ -210,7 +210,7 @@ describe('SectionUploader', () => {
         it('should reject with an error if an article upload returns an error', () => {
             const section = testUtils.createSection();
             const error = {error: 'error'};
-            this.createArticleStub.yields(error);
+            this.createArticleStub.returns(Promise.reject(error));
             const uploader = new SectionUploader(section, this.zendeskClient);
 
             return expect(uploader.upload())

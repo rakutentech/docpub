@@ -1,5 +1,5 @@
 const Uploader = require('../../../lib/zendesk-uploader/uploader');
-const zendesk = require('node-zendesk');
+const apiUtils = require('../../../lib/zendesk-uploader/api-utils');
 
 describe('Uploader', () => {
     const sandbox = sinon.sandbox.create();
@@ -29,11 +29,11 @@ describe('Uploader', () => {
     describe('constructor', () => {
         it('should not initialize an instance of zendesk client if one was already passed with the constructor', () => {
             const zendeskClient = sinon.stub().returns({});
-            sandbox.spy(zendesk, 'createClient');
+            sandbox.spy(apiUtils, 'getClient');
             /*eslint-disable no-new*/
             new Uploader({meta: {}}, zendeskClient);
             /*eslint-enable no-new*/
-            expect(zendesk.createClient).to.not.have.been.called;
+            expect(apiUtils.getClient).to.not.have.been.called;
         });
     });
 

@@ -6,7 +6,7 @@ describe('ArticleUploader', () => {
     beforeEach(() => {
         this.zendeskClient = sandbox.stub();
         this.zendeskClient.articles = {
-            create: sandbox.stub().yields(null, null, {id: 123456, position: 2})
+            create: sandbox.stub().returns(Promise.resolve({id: 123456, position: 2}))
         };
     });
     afterEach(() => {
@@ -40,7 +40,7 @@ describe('ArticleUploader', () => {
                     labels: ['test', 'test2']
                 }
             });
-            this.zendeskClient.articles.create.yields(null, null, {id: 123456, position: 42});
+            this.zendeskClient.articles.create.returns(Promise.resolve({id: 123456, position: 42}));
             const uploader = new ArticleUploader(article, this.zendeskClient);
 
             return expect(uploader.upload())
@@ -58,7 +58,7 @@ describe('ArticleUploader', () => {
             const error = {
                 error: 'error message'
             };
-            this.zendeskClient.articles.create.yields(error);
+            this.zendeskClient.articles.create.returns(Promise.reject(error));
             const uploader = new ArticleUploader(article, this.zendeskClient);
 
             return expect(uploader.upload())
@@ -193,7 +193,7 @@ describe('ArticleUploader', () => {
 
         it('should set the returned article id to the meta property', () => {
             const article = testUtils.createArticle();
-            this.zendeskClient.articles.create.yields(null, null, {id: 123456, position: 42});
+            this.zendeskClient.articles.create.returns(Promise.resolve({id: 123456, position: 42}));
             const uploader = new ArticleUploader(article, this.zendeskClient);
 
             return uploader.upload()
@@ -205,7 +205,7 @@ describe('ArticleUploader', () => {
 
         it('should set the returned article position to the meta property', () => {
             const article = testUtils.createArticle();
-            this.zendeskClient.articles.create.yields(null, null, {id: 123456, position: 454});
+            this.zendeskClient.articles.create.returns(Promise.resolve({id: 123456, position: 454}));
             const uploader = new ArticleUploader(article, this.zendeskClient);
 
             return uploader.upload()

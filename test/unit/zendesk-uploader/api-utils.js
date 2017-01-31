@@ -1,10 +1,16 @@
 const zendesk = require('node-zendesk');
-const apiUtils = require('../../../lib/zendesk-uploader/api-utils');
+var proxyquire = require('proxyquire');
+let apiUtils;
 
 describe('api-utils', () => {
     const sandbox = sinon.sandbox.create();
     beforeEach(() => {
         this.zendeskClient = sandbox.stub();
+        let ZendeskClientWrapper = sinon.stub();
+        apiUtils = proxyquire('../../../lib/zendesk-uploader/api-utils', {
+            './client-wrapper': ZendeskClientWrapper
+        });
+        sandbox.stub(zendesk, 'createClient');
         process.env.ZENDESK_API_USERNAME = 'username';
         process.env.ZENDESK_API_TOKEN = 'token';
         process.env.ZENDESK_URL = 'url';
@@ -17,14 +23,12 @@ describe('api-utils', () => {
     });
     describe('getClient', () => {
         it('should create an instance of the zendesk API client', () => {
-            sandbox.spy(zendesk, 'createClient');
             apiUtils.getClient();
             expect(zendesk.createClient).to.have.been.called;
         });
 
         it('should remove trailing slashes from the provided zendesk URI', () => {
             process.env.ZENDESK_URL = 'http://www.url.com//';
-            sandbox.spy(zendesk, 'createClient');
             apiUtils.getClient();
             expect(zendesk.createClient)
                 .to.have.been.calledWithMatch({remoteUri: 'http://www.url.com/api/v2/help_center'});

@@ -14,7 +14,7 @@ module.exports = {
         'comma-dangle': ['error', 'never'],
         'comma-spacing': ["error", { "before": false, "after": true }],
         'comma-style': ['error', 'last'],
-        'consistent-this': ['error', '_this'],
+        'consistent-this': ['error', 'self'],
         'curly': 'error',
         'eol-last': 'error',
         'eqeqeq': ['error', 'always'],
