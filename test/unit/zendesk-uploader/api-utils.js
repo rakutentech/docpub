@@ -3,16 +3,8 @@ const apiUtils = require('../../../lib/zendesk-uploader/api-utils');
 
 describe('api-utils', () => {
     const sandbox = sinon.sandbox.create();
-    before(() => {
-        this.zendeskClient = zendesk.createClient({
-            username: 'username',
-            token: 'token',
-            remoteUri: 'uri',
-            helpcenter: true,
-            disableGlobalState: true
-        });
-    });
     beforeEach(() => {
+        this.zendeskClient = sandbox.stub();
         process.env.ZENDESK_API_USERNAME = 'username';
         process.env.ZENDESK_API_TOKEN = 'token';
         process.env.ZENDESK_URL = 'url';
@@ -21,7 +13,6 @@ describe('api-utils', () => {
         delete process.env.ZENDESK_API_USERNAME;
         delete process.env.ZENDESK_API_TOKEN;
         delete process.env.ZENDESK_URL;
-        delete this.response;
         sandbox.restore();
     });
     describe('getClient', () => {
@@ -65,13 +56,19 @@ describe('api-utils', () => {
                     'viewable_by': 'staff'
                 }
             };
+            this.zendeskClient.accesspolicies = {
+                update: sandbox.stub().yields(null, null, this.response)
+            };
+        });
+        afterEach(() => {
+            delete this.policy;
+            delete this.response;
         });
         it('should fulfill a promise and return the updated access policy on successful update', () => {
             const params = {
                 sectionId: 123,
                 meta: this.policy
             };
-            sandbox.stub(this.zendeskClient.accesspolicies, 'update').yields(null, null, this.response);
 
             return expect(apiUtils.setSectionAccessPolicy(params, this.zendeskClient))
                 .to.have.become(this.response);
@@ -83,7 +80,7 @@ describe('api-utils', () => {
                 sectionId: 123,
                 meta: this.policy
             };
-            sandbox.stub(this.zendeskClient.accesspolicies, 'update').yields(error);
+            this.zendeskClient.accesspolicies.update.yields(error);
 
             return expect(apiUtils.setSectionAccessPolicy(params, this.zendeskClient))
                 .to.be.rejectedWith(error);
@@ -105,7 +102,6 @@ describe('api-utils', () => {
                 sectionId: 123,
                 meta: this.policy
             };
-            sandbox.stub(this.zendeskClient.accesspolicies, 'update').yields(null, null, this.response);
 
             return apiUtils.setSectionAccessPolicy(params, this.zendeskClient)
                 .then(() => {
@@ -124,7 +120,6 @@ describe('api-utils', () => {
                 sectionId: 123,
                 meta: this.policy
             };
-            sandbox.stub(this.zendeskClient.accesspolicies, 'update').yields(null, null, this.response);
 
             return apiUtils.setSectionAccessPolicy(params, this.zendeskClient)
                 .then(() => {
