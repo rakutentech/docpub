@@ -154,25 +154,6 @@ describe('ArticleUploader', () => {
                 });
         });
 
-        it('should convert a string of comma seperated labels to an array', () => {
-            const article = testUtils.createArticle({
-                meta: {
-                    labels: 'label1, label2, label3'
-                }
-            });
-            const uploader = new ArticleUploader(article, this.zendeskClient);
-
-            return uploader.upload()
-                .then(() => {
-                    expect(this.zendeskClient.articles.create)
-                        .to.have.been.calledWith(sinon.match.any, {
-                            article: sinon.match({
-                                'label_names': ['label1', 'label2', 'label3']
-                            })
-                        });
-                });
-        });
-
         it('should set the `html` request property to the converted html', () => {
             const html = '<h1>Test Text Goes Here</h1>';
             const article = testUtils.createArticle({

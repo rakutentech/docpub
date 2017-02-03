@@ -10,10 +10,17 @@ describe('Documentation directory reading', () => {
     });
 
     describe('correct folder', () => {
-        const dirPath = path.resolve(__dirname, 'fixtures/documentation-folder-structure/correct');
+        const dirPath = path.resolve(__dirname, 'fixtures/documentation-folder-structure/correct/with-system-meta');
 
         it('should read directory without errors', () => {
             const category = new Category(dirPath);
+
+            return expect(category.read()).to.be.fulfilled;
+        });
+
+        it('should successfully read directory without .meta.md files', () => {
+            const missingMetaPath = path.resolve(__dirname, 'fixtures/documentation-folder-structure/correct/without-system-meta');
+            const category = new Category(missingMetaPath);
 
             return expect(category.read()).to.be.fulfilled;
         });
@@ -34,26 +41,52 @@ describe('Documentation directory reading', () => {
                 });
         });
 
-        it('should correctly read metadata for each entity', () => {
+        it('should correctly read user metadata for each entity', () => {
             const category = new Category(dirPath);
 
             return category.read()
                 .then(() => {
-                    expect(category.meta).to.be.eql({
-                        title: 'category_title',
-                        description: 'category_description'
-                    });
+                    expect(category.meta).to.have.property('title', 'category_title');
+                    expect(category.meta).to.have.property('description', 'category_description');
+                    expect(category.meta).to.have.property('position', 1);
+                    expect(category.meta).to.have.property('locale', 'en-us');
 
                     const section = category.sections[0];
-                    expect(section.meta).to.be.eql({
-                        title: 'section_title',
-                        description: 'section_description'
-                    });
+                    expect(section.meta).to.have.property('title', 'section_title');
+                    expect(section.meta).to.have.property('description', 'section_description');
+                    expect(section.meta).to.have.property('position', 1);
+                    expect(section.meta).to.have.property('locale', 'en-us');
+                    expect(section.meta).to.have.property('viewableBy', 'everybody');
+                    expect(section.meta).to.have.property('manageableBy', 'staff');
 
                     const article = section.articles[0];
-                    expect(article.meta).to.be.eql({
-                        title: 'article_title',
-                        description: 'article_description'
+                    expect(article.meta).to.have.property('title', 'article_title');
+                    expect(article.meta.labels).to.be.eql(['label', 'another label']); // property syntax checks equal, not eql
+                    expect(article.meta).to.have.property('position', 1);
+                    expect(article.meta).to.have.property('locale', 'en-us');
+                });
+        });
+
+        it('should correctly read system metadata for each entity', () => {
+            const category = new Category(dirPath);
+
+            return category.read()
+                .then(() => {
+                    expect(category.meta).to.have.property('zendeskId', 1);
+                    expect(category.meta).to.have.property('hash', 'abcdef');
+
+                    const section = category.sections[0];
+                    expect(section.meta).to.have.property('zendeskId', 1);
+                    expect(section.meta).to.have.property('hash', 'abcdef');
+
+                    const article = section.articles[0];
+                    expect(section.meta).to.have.property('zendeskId', 1);
+                    expect(section.meta).to.have.property('hash', 'abcdef');
+                    expect(article.meta.resources).to.be.eql({
+                        'content.md': {
+                            'zendeskId': 2,
+                            'hash': 'abcdef'
+                        }
                     });
                 });
         });
@@ -87,8 +120,10 @@ describe('Documentation directory reading', () => {
     });
 
     describe('broken folder', () => {
+        const brokenDirPath = path.resolve(__dirname, 'fixtures/documentation-folder-structure/broken/');
+
         it('should fail if category meta missing', () => {
-            const dirPath = path.resolve(__dirname, 'fixtures/documentation-folder-structure/missing-category-meta');
+            const dirPath = path.resolve(brokenDirPath, 'missing-category-meta');
             const category = new Category(dirPath);
 
             return expect(category.read())
@@ -96,7 +131,7 @@ describe('Documentation directory reading', () => {
         });
 
         it('should fail if section meta is missing', () => {
-            const dirPath = path.resolve(__dirname, 'fixtures/documentation-folder-structure/missing-section-meta');
+            const dirPath = path.resolve(brokenDirPath, 'missing-section-meta');
             const category = new Category(dirPath);
 
             return expect(category.read())
@@ -104,7 +139,7 @@ describe('Documentation directory reading', () => {
         });
 
         it('should fail if article meta is missing', () => {
-            const dirPath = path.resolve(__dirname, 'fixtures/documentation-folder-structure/missing-article-meta');
+            const dirPath = path.resolve(brokenDirPath, 'missing-article-meta');
             const category = new Category(dirPath);
 
             return expect(category.read())
@@ -112,7 +147,7 @@ describe('Documentation directory reading', () => {
         });
 
         it('should fail if markdown file is not presented in article folder', () => {
-            const dirPath = path.resolve(__dirname, 'fixtures/documentation-folder-structure/missing-article-md');
+            const dirPath = path.resolve(brokenDirPath, 'missing-article-md');
             const category = new Category(dirPath);
 
             return expect(category.read())
@@ -120,11 +155,27 @@ describe('Documentation directory reading', () => {
         });
 
         it('should fail if found more then one markdown file for article', () => {
-            const dirPath = path.resolve(__dirname, 'fixtures/documentation-folder-structure/multiple-article-md');
+            const dirPath = path.resolve(brokenDirPath, 'multiple-article-md');
             const category = new Category(dirPath);
 
             return expect(category.read())
                 .to.be.rejectedWith(/Found more than 1 markdown file/);
+        });
+
+        it('should fail if title missed in meta.json', () => {
+            const dirPath = path.resolve(brokenDirPath, 'missing-meta-title');
+            const category = new Category(dirPath);
+
+            return expect(category.read())
+                .to.be.rejectedWith(/title/);
+        });
+
+        it('should fail if meta.json contains something else than expected properties', () => {
+            const dirPath = path.resolve(brokenDirPath, 'unknown-meta-key');
+            const category = new Category(dirPath);
+
+            return expect(category.read())
+                .to.be.rejectedWith(/foo/);
         });
     });
 });

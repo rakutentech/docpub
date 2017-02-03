@@ -1,0 +1,8 @@
+ {
+     "title": "section_title",
+     "description": "section_description",
+     "position": 1,
+     "locale": "en-us",
+     "viewableBy": "everybody",
+     "manageableBy": "staff"
+ }

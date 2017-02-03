@@ -1,20 +1,27 @@
 const mockFs = require('mock-fs');
-const Promise = require('bluebird');
 const Section = require('../../lib/section');
 const Category = require('../../lib/category');
+const metadata = require('../../lib/metadata');
+const Metadata = require('../../lib/metadata/metadata');
 
 describe('Category', () => {
+    const sandbox = sinon.sandbox.create();
+
+    afterEach(() => {
+        sandbox.restore();
+    });
+
     describe('constructor', () => {
-        it('should throw if path is not defined', () => {
-            const path = null;
-
-            expect(() => new Category(path)).to.throw(/string/);
-        });
-
         it('should throw if path is not string', () => {
             const path = {};
 
             expect(() => new Category(path)).to.throw(/string/);
+        });
+
+        it('should throw if path empty', () => {
+            const path = '';
+
+            expect(() => new Category(path)).to.throw(/empty/);
         });
 
         it('should set category type as `category`', () => {
@@ -22,36 +29,47 @@ describe('Category', () => {
 
             expect(category.type).to.be.eql('category');
         });
+
+        it('should initialise metadata', () => {
+            const category = new Category('some_path');
+
+            expect(category.meta).to.be.instanceOf(Metadata);
+        });
+
+        it('should initialise metadata for category', () => {
+            sandbox.spy(metadata, 'buildForCategory');
+
+            /*eslint-disable no-new*/
+            new Category('some_path');
+            /*eslint-enable no-new*/
+
+            expect(metadata.buildForCategory).to.be.calledWith('some_path');
+        });
     });
 
     describe('read', () => {
-        const sandbox = sinon.sandbox.create();
-
         beforeEach(() => {
-            sandbox.stub(Section.prototype, 'read').returns(Promise.resolve());
+            sandbox.stub(Metadata.prototype, 'read').resolves();
+            sandbox.stub(Section.prototype, 'read').resolves();
         });
 
         afterEach(() => {
-            sandbox.restore();
             mockFs.restore();
         });
 
-        it('should load metadata from file named `meta.json`', () => {
-            mockFs({
-                'meta.json': '{"foo":"bar"}'
-            });
+        it('should read metadata', () => {
+            mockFs({});
 
             const category = new Category('.');
 
             return category.read()
                 .then(() => {
-                    expect(category.meta).to.be.eql({foo: 'bar'});
+                    expect(Metadata.prototype.read).to.be.calledOnce;
                 });
         });
 
         it('should create section for each subfolder in category dir', () => {
             mockFs({
-                'meta.json': '{"foo":"bar"}',
                 'section': {},
                 'another_section': {}
             });
@@ -66,7 +84,6 @@ describe('Category', () => {
 
         it('should start reading contents of each child section', () => {
             mockFs({
-                'meta.json': '{"foo":"bar"}',
                 'section': {},
                 'another_section': {}
             });
@@ -81,7 +98,6 @@ describe('Category', () => {
 
         it('should link child section with itself', () => {
             mockFs({
-                'meta.json': '{"foo":"bar"}',
                 'section': {}
             });
 

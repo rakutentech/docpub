@@ -1,18 +1,17 @@
-const mockFs = require('mock-fs');
 const Document = require('../../lib/document');
 
 describe('Document', () => {
     describe('constructor', () => {
-        it('should throw if path is not defined', () => {
-            const path = null;
-
-            expect(() => new Document(path)).to.throw(/string/);
-        });
-
         it('should throw if path is not string', () => {
             const path = {};
 
             expect(() => new Document(path)).to.throw(/string/);
+        });
+
+        it('should throw if path empty', () => {
+            const path = '';
+
+            expect(() => new Document(path)).to.throw(/empty/);
         });
 
         it('should set document type as `generic_document`', () => {
@@ -23,42 +22,20 @@ describe('Document', () => {
     });
 
     describe('read', () => {
+        const sandbox = sinon.sandbox.create();
+
         afterEach(() => {
-            mockFs.restore();
+            sandbox.restore();
         });
 
-        it('should load metadata from file named `meta.json`', () => {
-            mockFs({
-                'meta.json': '{"foo":"bar"}'
-            });
+        it('should read metadata', () => {
+            const doc = new Document('some_path');
+            doc.meta = {read: sandbox.stub().resolves()};
 
-            const document = new Document('.');
-
-            return document.read()
+            return doc.read()
                 .then(() => {
-                    expect(document.meta).to.be.eql({foo: 'bar'});
+                    expect(doc.meta.read).to.be.calledOnce;
                 });
-        });
-
-        it('should reject if was unable to find metadata file named `meta.json`', () => {
-            mockFs({
-                'wrong.meta.json': '{"foo":"bar"}'
-            });
-
-            const document = new Document('.');
-
-            return expect(document.read()).to.be.rejectedWith(/does not exist/);
-        });
-
-        it('should reject if was unable to parse metadata', () => {
-            mockFs({
-                'meta.json': 'broken_data_here'
-            });
-
-            const document = new Document('.');
-
-            return expect(document.read())
-                .to.be.rejectedWith(/JSON/);
         });
     });
 });

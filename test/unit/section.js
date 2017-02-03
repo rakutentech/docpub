@@ -1,22 +1,29 @@
 const _ = require('lodash');
-const Promise = require('bluebird');
 const mockFs = require('mock-fs');
 const Section = require('../../lib/section');
 const Article = require('../../lib/article');
 const Category = require('../../lib/category');
+const metadata = require('../../lib/metadata');
+const Metadata = require('../../lib/metadata/metadata');
 
 describe('Section', () => {
+    const sandbox = sinon.sandbox.create();
+
+    afterEach(() => {
+        sandbox.restore();
+    });
+
     describe('constructor', () => {
-        it('should throw if path is not defined', () => {
-            const path = null;
-
-            expect(() => new Section(path)).to.throw(/string/);
-        });
-
         it('should throw if path is not string', () => {
             const path = {};
 
             expect(() => new Section(path)).to.throw(/string/);
+        });
+
+        it('should throw if path empty', () => {
+            const path = '';
+
+            expect(() => new Section(path)).to.throw(/empty/);
         });
 
         it('should throw if parent category is not passed', () => {
@@ -24,40 +31,49 @@ describe('Section', () => {
         });
 
         it('should set section type as `section`', () => {
-            const category = createSection_();
+            const section = createSection_();
 
-            expect(category.type).to.be.eql('section');
+            expect(section.type).to.be.eql('section');
+        });
+
+        it('should initialise metadata', () => {
+            const section = createSection_();
+
+            expect(section.meta).to.be.instanceOf(Metadata);
+        });
+
+        it('should initialise metadata for section', () => {
+            sandbox.spy(metadata, 'buildForSection');
+
+            createSection_({path: 'some_path'});
+
+            expect(metadata.buildForSection).to.be.calledWith('some_path');
         });
     });
 
     describe('read', () => {
-        const sandbox = sinon.sandbox.create();
-
         beforeEach(() => {
-            sandbox.stub(Article.prototype, 'read').returns(Promise.resolve());
+            sandbox.stub(Article.prototype, 'read').resolves();
+            sandbox.stub(Metadata.prototype, 'read').resolves();
         });
 
         afterEach(() => {
-            sandbox.restore();
             mockFs.restore();
         });
 
-        it('should load metadata from file named `meta.json`', () => {
-            mockFs({
-                'meta.json': '{"foo":"bar"}'
-            });
+        it('should load metadata', () => {
+            mockFs({});
 
             const section = createSection_();
 
             return section.read()
                 .then(() => {
-                    expect(section.meta).to.be.eql({foo: 'bar'});
+                    expect(Metadata.prototype.read).to.be.called;
                 });
         });
 
         it('should create article for each subfolder in section dir', () => {
             mockFs({
-                'meta.json': '{"foo":"bar"}',
                 'article': {},
                 'another_article': {}
             });
@@ -72,7 +88,6 @@ describe('Section', () => {
 
         it('should start reading contents of each child article', () => {
             mockFs({
-                'meta.json': '{"foo":"bar"}',
                 'article': {},
                 'another_article': {}
             });
@@ -87,7 +102,6 @@ describe('Section', () => {
 
         it('should link child article with itself', () => {
             mockFs({
-                'meta.json': '{"foo":"bar"}',
                 'article': {}
             });
 

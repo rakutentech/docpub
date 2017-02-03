@@ -1,0 +1,10 @@
+{
+    "zendeskId": 1,
+    "hash": "abcdef",
+    "resources": {
+        "content.md": {
+            "zendeskId": 2,
+            "hash": "abcdef"
+        }
+    }
+}

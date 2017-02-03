@@ -4,26 +4,31 @@ const Article = require('../../lib/article');
 const Section = require('../../lib/section');
 const fsu = require('../../lib/fs-utils.js');
 const MarkdownRenderer = require('../../lib/md-renderer');
+const metadata = require('../../lib/metadata');
+const Metadata = require('../../lib/metadata/metadata');
 
 describe('Article', () => {
     const sandbox = sinon.sandbox.create();
 
+    beforeEach(() => {
+        sandbox.stub(Metadata.prototype, 'read').resolves();
+    });
+
     afterEach(() => {
         sandbox.restore();
-        mockFs.restore();
     });
 
     describe('constructor', () => {
-        it('should throw if path is not defined', () => {
-            const path = null;
-
-            expect(() => new Article(path)).to.throw(/string/);
-        });
-
         it('should throw if path is not string', () => {
             const path = {};
 
-            expect(() => new Article(path)).to.throw(/string/);
+            expect(() => new Section(path)).to.throw(/string/);
+        });
+
+        it('should throw if path empty', () => {
+            const path = '';
+
+            expect(() => new Section(path)).to.throw(/empty/);
         });
 
         it('should throw if parent section is not passed', () => {
@@ -31,16 +36,33 @@ describe('Article', () => {
         });
 
         it('should set article type as `article`', () => {
-            const category = createArticle_();
+            const article = createArticle_();
 
-            expect(category.type).to.be.eql('article');
+            expect(article.type).to.be.eql('article');
+        });
+
+        it('should initialise metadata', () => {
+            const article = createArticle_();
+
+            expect(article.meta).to.be.instanceOf(Metadata);
+        });
+
+        it('should initialise metadata for specified article', () => {
+            sandbox.spy(metadata, 'buildForArticle');
+
+            createArticle_({path: 'some_path'});
+
+            expect(metadata.buildForArticle).to.be.calledWith('some_path');
         });
     });
 
     describe('read', () => {
+        afterEach(() => {
+            mockFs.restore();
+        });
+
         it('should load metadata from file named `meta.json`', () => {
             mockFs({
-                'meta.json': '{"foo":"bar"}',
                 'content.md': `content_goes_here`
             });
 
@@ -48,13 +70,12 @@ describe('Article', () => {
 
             return article.read()
                 .then(() => {
-                    expect(article.meta).to.be.eql({foo: 'bar'});
+                    expect(Metadata.prototype.read).to.be.calledOnce;
                 });
         });
 
         it('should search for .md file with article content', () => {
             mockFs({
-                'meta.json': '{"foo":"bar"}',
                 'content.md': `content_goes_here`
             });
             sandbox.spy(fsu, 'findFilesOfTypes').named('findFilesOfTypes');
@@ -68,9 +89,7 @@ describe('Article', () => {
         });
 
         it('should reject if unable to find any .md files', () => {
-            mockFs({
-                'meta.json': '{"foo":"bar"}'
-            });
+            mockFs({});
 
             const article = createArticle_();
 
@@ -80,7 +99,6 @@ describe('Article', () => {
 
         it('should reject if found more than 1 .md file', () => {
             mockFs({
-                'meta.json': '{"foo":"bar"}',
                 'content.md': `content_goes_here`,
                 'more_content.md': `content_goes_here`
             });
@@ -93,7 +111,6 @@ describe('Article', () => {
 
         it('should search for article resources in `.jpg` format', () => {
             mockFs({
-                'meta.json': '{"foo":"bar"}',
                 'content.md': `content_goes_here`,
                 'image.jpg': 'image_bytes_here'
             });
@@ -110,7 +127,6 @@ describe('Article', () => {
 
         it('should search for article resources in `.jpeg` format', () => {
             mockFs({
-                'meta.json': '{"foo":"bar"}',
                 'content.md': `content_goes_here`,
                 'image.jpeg': 'image_bytes_here'
             });
@@ -127,7 +143,6 @@ describe('Article', () => {
 
         it('should search for article resources in `.png` format', () => {
             mockFs({
-                'meta.json': '{"foo":"bar"}',
                 'content.md': `content_goes_here`,
                 'image.png': 'image_bytes_here'
             });
@@ -144,7 +159,6 @@ describe('Article', () => {
 
         it('should search for article resources in `.gif` format', () => {
             mockFs({
-                'meta.json': '{"foo":"bar"}',
                 'content.md': `content_goes_here`,
                 'image.gif': 'image_bytes_here'
             });
@@ -161,7 +175,6 @@ describe('Article', () => {
 
         it('should search for article resources in `.svg` format', () => {
             mockFs({
-                'meta.json': '{"foo":"bar"}',
                 'content.md': `content_goes_here`,
                 'image.svg': 'image_bytes_here'
             });
@@ -178,7 +191,6 @@ describe('Article', () => {
 
         it('should search for article resources in `.pdf` format', () => {
             mockFs({
-                'meta.json': '{"foo":"bar"}',
                 'content.md': `content_goes_here`,
                 'image.pdf': 'image_bytes_here'
             });
@@ -195,7 +207,6 @@ describe('Article', () => {
 
         it('should search for all available resources in same time', () => {
             mockFs({
-                'meta.json': '{"foo":"bar"}',
                 'content.md': `content_goes_here`,
                 'image.jpg': 'image_bytes_here',
                 'image.jpeg': 'image_bytes_here',
@@ -255,7 +266,6 @@ describe('Article', () => {
 
         it('should reuse results of previous conversion on subsequent calls', () => {
             mockFs({
-                'meta.json': '{"foo":"bar"}',
                 'content.md': '# Header'
             });
             sandbox.spy(MarkdownRenderer.prototype, 'render');
@@ -273,7 +283,6 @@ describe('Article', () => {
 
         function convertMarkdown_(markdown) {
             mockFs({
-                'meta.json': '{"foo":"bar"}',
                 'content.md': markdown || '# Header'
             });
 
