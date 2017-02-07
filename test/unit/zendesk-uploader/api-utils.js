@@ -61,7 +61,7 @@ describe('api-utils', () => {
                 }
             };
             this.zendeskClient.accesspolicies = {
-                update: sandbox.stub().yields(null, null, this.response)
+                update: sandbox.stub().returns(Promise.resolve(this.response))
             };
         });
         afterEach(() => {
@@ -84,7 +84,7 @@ describe('api-utils', () => {
                 sectionId: 123,
                 meta: this.policy
             };
-            this.zendeskClient.accesspolicies.update.yields(error);
+            this.zendeskClient.accesspolicies.update.returns(Promise.reject(error));
 
             return expect(apiUtils.setSectionAccessPolicy(params, this.zendeskClient))
                 .to.be.rejectedWith(error);
