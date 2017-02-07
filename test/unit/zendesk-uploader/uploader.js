@@ -7,23 +7,12 @@ describe('Uploader', () => {
         process.env.ZENDESK_API_USERNAME = 'username';
         process.env.ZENDESK_API_TOKEN = 'token';
         process.env.ZENDESK_URL = 'url';
-
-        this.document = {
-            type: 'type',
-            meta: {
-                title: 'Test Title',
-                position: 42,
-                locale: 'locale'
-            },
-            body: '<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>'
-        };
     });
     afterEach(() => {
         sandbox.restore();
         delete process.env.ZENDESK_API_USERNAME;
         delete process.env.ZENDESK_API_TOKEN;
         delete process.env.ZENDESK_URL;
-        delete this.document;
     });
 
     describe('constructor', () => {
@@ -33,20 +22,53 @@ describe('Uploader', () => {
             /*eslint-disable no-new*/
             new Uploader({meta: {}}, zendeskClient);
             /*eslint-enable no-new*/
-            expect(apiUtils.getClient).to.not.have.been.called;
+
+            expect(apiUtils.getClient)
+                .to.not.have.been.called;
         });
     });
 
-    describe('upload', () => {
-        it('should return a promise on success', () => {
-            let uploader = new Uploader(this.document);
-            return expect(uploader.upload()).to.be.fulfilled;
+    describe('create', () => {
+        it('should return a promise', () => {
+            const document = {
+                meta: {
+                    title: 'Test Title'
+                }
+            };
+            let uploader = new Uploader(document);
+
+            return expect(uploader.create())
+                .to.be.fulfilled;
+        });
+    });
+
+    describe('sync', () => {
+        it('should return true if the document has changed', () => {
+            const document = {
+                meta: {
+                    title: 'Test Title',
+                    zendeskId: 12345
+                },
+                isChanged: sinon.stub().resolves(true)
+            };
+            let uploader = new Uploader(document);
+
+            return expect(uploader.sync())
+                .to.become(true);
         });
 
-        it('should reject with an error if title is not defined', () => {
-            delete this.document.meta.title;
-            const uploader = new Uploader(this.document);
-            return expect(uploader.upload()).to.be.rejectedWith(/`title` is missing from the metadata/);
+        it('should return false if the document has not changed', () => {
+            const document = {
+                meta: {
+                    title: 'Test Title',
+                    zendeskId: 12345
+                },
+                isChanged: sinon.stub().resolves(false)
+            };
+            let uploader = new Uploader(document);
+
+            return expect(uploader.sync())
+                .to.become(false);
         });
     });
 });

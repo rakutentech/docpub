@@ -3,13 +3,18 @@ const _ = require('lodash');
 function createArticle(opts) {
     opts = opts || {};
     const article = _.defaultsDeep(opts, {
-        meta: {title: 'Test Article'},
-        convertMarkdown: sinon.stub().returns(Promise.resolve('<p>Lorem ipsum dolor sit amet</p>'))
+        meta: {
+            title: 'Test Article',
+            update: sinon.stub().returns(),
+            write: sinon.stub().resolves()
+        },
+        convertMarkdown: sinon.stub().resolves('<p>Lorem ipsum dolor sit amet</p>'),
+        isChanged: sinon.stub().resolves(true)
     });
     article.section = opts.section || createSection({
         articles: article,
         meta: {
-            id: 123456
+            zendeskId: 123456
         }
     });
 
@@ -18,11 +23,16 @@ function createArticle(opts) {
 
 function createSection(opts) {
     opts = opts || {};
-    const section = {
-        meta: _.defaults(opts.meta || {}, {
-            title: 'Test Section'
-        })
-    };
+    const section = _.defaultsDeep(opts, {
+        meta: {
+            title: 'Test Section',
+            viewableBy: 'everyone',
+            manageableBy: 'staff',
+            update: sinon.stub().returns(),
+            write: sinon.stub().resolves()
+        },
+        isChanged: sinon.stub().resolves(true)
+    });
     section.articles = [].concat(opts.articles || [
         createArticle({section: section}),
         createArticle({section: section})
@@ -30,7 +40,7 @@ function createSection(opts) {
     section.category = opts.category || createCategory({
         sections: section,
         meta: {
-            id: 123456
+            zendeskId: 123456
         }
     });
 
@@ -39,11 +49,14 @@ function createSection(opts) {
 
 function createCategory(opts) {
     opts = opts || {};
-    const category = {
-        meta: _.defaults(opts.meta || {}, {
-            title: 'Test Category'
-        })
-    };
+    const category = _.defaultsDeep(opts, {
+        meta: {
+            title: 'Test Category',
+            update: sinon.stub().returns(),
+            write: sinon.stub().resolves()
+        },
+        isChanged: sinon.stub().resolves(true)
+    });
     category.sections = [].concat(opts.sections || [
         createSection({category: category}),
         createSection({category: category})
