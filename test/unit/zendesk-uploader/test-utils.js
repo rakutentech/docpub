@@ -3,6 +3,7 @@ const _ = require('lodash');
 function createArticle(opts) {
     opts = opts || {};
     const article = _.defaultsDeep(opts, {
+        type: 'article',
         meta: {
             title: 'Test Article',
             update: sinon.stub().returns(),
@@ -24,6 +25,7 @@ function createArticle(opts) {
 function createSection(opts) {
     opts = opts || {};
     const section = _.defaultsDeep(opts, {
+        type: 'section',
         meta: {
             title: 'Test Section',
             viewableBy: 'everyone',
@@ -50,6 +52,7 @@ function createSection(opts) {
 function createCategory(opts) {
     opts = opts || {};
     const category = _.defaultsDeep(opts, {
+        type: 'category',
         meta: {
             title: 'Test Category',
             update: sinon.stub().returns(),
