@@ -30,6 +30,19 @@ describe('Section', () => {
             expect(() => new Section('.')).to.throw(/Missing parent category/);
         });
 
+        it('should set passed path as section path', () => {
+            const section = createSection_({path: 'foo'});
+
+            expect(section.path).to.be.equal('foo');
+        });
+
+        it('should set parent category as passed category', () => {
+            const category = sinon.createStubInstance(Category);
+            const section = new Section('path', category);
+
+            expect(section.category).to.be.equal(category);
+        });
+
         it('should set section type as `section`', () => {
             const section = createSection_();
 

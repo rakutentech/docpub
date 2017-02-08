@@ -14,6 +14,12 @@ describe('Document', () => {
             expect(() => new Document(path)).to.throw(/empty/);
         });
 
+        it('should set passed path', () => {
+            const doc = new Document('some_path');
+
+            expect(doc.path).to.be.equal('some_path');
+        });
+
         it('should set document type as `generic_document`', () => {
             const doc = new Document('some_path');
 

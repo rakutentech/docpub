@@ -35,6 +35,19 @@ describe('Article', () => {
             expect(() => new Article('.')).to.throw(/Missing section/);
         });
 
+        it('should set article path as passed path', () => {
+            const article = createArticle_({path: 'foo'});
+
+            expect(article.path).to.be.eql('foo');
+        });
+
+        it('should set parent section as passed section', () => {
+            const section = sinon.createStubInstance(Section);
+            const article = new Article('path', section);
+
+            expect(article.section).to.be.equal(section);
+        });
+
         it('should set article type as `article`', () => {
             const article = createArticle_();
 

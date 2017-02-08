@@ -24,6 +24,12 @@ describe('Category', () => {
             expect(() => new Category(path)).to.throw(/empty/);
         });
 
+        it('should set category path as passed path', () => {
+            const category = new Category('foo');
+
+            expect(category.path).to.be.equal('foo');
+        });
+
         it('should set category type as `category`', () => {
             const category = new Category('some_path');
 
