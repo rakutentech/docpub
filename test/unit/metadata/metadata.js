@@ -2,6 +2,7 @@ const mockFs = require('mock-fs');
 const Metadata = require('../../../lib/metadata/metadata');
 const Dictionary = require('../../../lib/metadata/parser/dictionary');
 const Property = require('../../../lib/metadata/parser/property');
+const hash = require('../../../lib/hash');
 
 const fs = require('fs-promise');
 
@@ -290,6 +291,27 @@ describe('Metadata', () => {
             fs.writeFile.rejects(new Error('Unable to write'));
 
             return expect(metadata.write()).to.be.rejectedWith('Unable to write');
+        });
+    });
+
+    describe('currentHash', () => {
+        it('should return hash of stringified user meta', () => {
+            mockFs({
+                dir: {
+                    'meta.json': '{"foo": "bar"}'
+                }
+            });
+
+            const userScheme = Dictionary.createRoot(new Property('foo'));
+            const systemScheme = createRootSchemeStub_();
+            const metadata = new Metadata('dir', userScheme, systemScheme);
+
+            return metadata.read()
+                .then(() => {
+                    const expected = hash(JSON.stringify({foo: 'bar'}));
+
+                    expect(metadata.currentHash).to.be.equal(expected);
+                });
         });
     });
 

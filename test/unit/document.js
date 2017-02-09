@@ -155,6 +155,44 @@ describe('Document', () => {
             expect(document.findByPath()).to.be.equal(123);
         });
     });
+
+    describe('isNew', () => {
+        it('should return true if document has zendeskId equal to 0', () => {
+            const document = new Document('path');
+            document.meta = {zendeskId: 0};
+
+            expect(document.isNew).to.be.true;
+        });
+
+        it('should return false if document has zendeskId different from 0', () => {
+            const document = new Document('path');
+            document.meta = {zendeskId: 123456};
+
+            expect(document.isNew).to.be.false;
+        });
+    });
+
+    describe('isChanged', () => {
+        it('should return true if document hash differes from document currentHash', () => {
+            const document = new Document('path');
+            document.meta = {
+                hash: `123456`,
+                currentHash: `456789`
+            };
+
+            expect(document.isChanged).to.be.true;
+        });
+
+        it('should return false if document has same hash and currentHash', () => {
+            const document = new Document('path');
+            document.meta = {
+                hash: `123456`,
+                currentHash: `123456`
+            };
+
+            expect(document.isChanged).to.be.false;
+        });
+    });
 });
 
 function buildDocumentTree_(scheme, parent) {
