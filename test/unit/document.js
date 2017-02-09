@@ -14,6 +14,10 @@ describe('Document', () => {
             expect(() => new Document(path)).to.throw(/empty/);
         });
 
+        it('should throw if parent is not instance of Document', () => {
+            expect(() => new Document('path', {})).to.throw(/Document/);
+        });
+
         it('should set passed path', () => {
             const doc = new Document('some_path');
 
