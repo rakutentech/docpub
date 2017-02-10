@@ -68,6 +68,23 @@ function createCategory(opts) {
     return category;
 }
 
+function createResource(opts) {
+    opts = opts || {};
+    const resource = _.defaultsDeep(opts, {
+        path: 'test.jpg',
+        type: 'resource',
+        meta: {
+            update: sinon.stub().returns(),
+            write: sinon.stub().resolves()
+        },
+        isChanged: true,
+        isNew: false
+    });
+
+    return resource;
+}
+
 exports.createArticle = createArticle;
 exports.createSection = createSection;
 exports.createCategory = createCategory;
+exports.createResource = createResource;

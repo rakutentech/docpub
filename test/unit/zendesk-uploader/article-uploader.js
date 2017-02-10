@@ -9,6 +9,9 @@ describe('ArticleUploader', () => {
             create: sandbox.stub().resolves({id: 123456, position: 2}),
             update: sandbox.stub().resolves()
         };
+        this.zendeskClient.articleattachments = {
+            create: sandbox.stub().resolves({id: 54321})
+        };
     });
     afterEach(() => {
         sandbox.restore();
@@ -127,6 +130,173 @@ describe('ArticleUploader', () => {
                         .to.have.been.calledAfter(uploader.meta.update);
                 });
         });
+
+        describe('resources', () => {
+            it('should upload resources to the correct zendeskId', () => {
+                const article = testUtils.createArticle({meta: {zendeskId: 123456}});
+                article.resources = [
+                    testUtils.createResource()
+                ];
+                const uploader = new ArticleUploader(article, this.zendeskClient);
+
+                return uploader.create()
+                    .then(() => {
+                        expect(this.zendeskClient.articleattachments.create)
+                            .to.have.been.calledWithMatch(123456);
+                    });
+            });
+
+            it('should pass the resource path when uploading', () => {
+                const article = testUtils.createArticle({meta: {zendeskId: 123456}});
+                article.resources = [
+                    testUtils.createResource({path: './test/test1.jpg'})
+                ];
+                const uploader = new ArticleUploader(article, this.zendeskClient);
+
+                return uploader.create()
+                    .then(() => {
+                        expect(this.zendeskClient.articleattachments.create)
+                            .to.have.been.calledWithMatch(sinon.match.any, './test/test1.jpg');
+                    });
+            });
+
+            it('should upload all new resources', () => {
+                const article = testUtils.createArticle();
+                article.resources = [
+                    testUtils.createResource({isNew: true}),
+                    testUtils.createResource({isNew: true})
+                ];
+                const uploader = new ArticleUploader(article, this.zendeskClient);
+
+                return uploader.create()
+                    .then(() => {
+                        expect(this.zendeskClient.articleattachments.create)
+                            .to.have.been.calledTwice;
+                    });
+            });
+
+            it('should upload all changed resources', () => {
+                const article = testUtils.createArticle();
+                article.resources = [
+                    testUtils.createResource({
+                        isChanged: true,
+                        isNew: false
+                    }),
+                    testUtils.createResource({
+                        isChanged: true,
+                        isNew: false
+                    })
+                ];
+                const uploader = new ArticleUploader(article, this.zendeskClient);
+
+                return uploader.create()
+                    .then(() => {
+                        expect(this.zendeskClient.articleattachments.create)
+                            .to.have.been.calledTwice;
+                    });
+            });
+
+            it('should upload both new and changed resources at the same time', () => {
+                const article = testUtils.createArticle();
+                article.resources = [
+                    testUtils.createResource({
+                        path: 'test.jpg',
+                        isChanged: true,
+                        isNew: false
+                    }),
+                    testUtils.createResource({
+                        path: 'test2.jpg',
+                        isChanged: false,
+                        isNew: true
+                    })
+                ];
+                const uploader = new ArticleUploader(article, this.zendeskClient);
+
+                return uploader.create()
+                    .then(() => {
+                        expect(this.zendeskClient.articleattachments.create)
+                            .to.have.been.calledTwice;
+                    });
+            });
+
+            it('should not upload any resources if none are changed or new', () => {
+                const article = testUtils.createArticle();
+                article.meta.resources = [
+                    testUtils.createResource({
+                        path: 'test.jpg',
+                        isChanged: false,
+                        isNew: false
+                    }),
+                    testUtils.createResource({
+                        path: 'test2.jpg',
+                        isChanged: false,
+                        isNew: false
+                    })
+                ];
+                const uploader = new ArticleUploader(article, this.zendeskClient);
+
+                return uploader.create()
+                    .then(() => {
+                        expect(this.zendeskClient.articleattachments.create)
+                            .to.not.have.been.called;
+                    });
+            });
+
+            it('should update the zendeskId after successful upload', () => {
+                const article = testUtils.createArticle();
+                const resource = testUtils.createResource();
+                article.resources = [
+                    resource
+                ];
+                this.zendeskClient.articleattachments.create.resolves({id: 54321});
+                const uploader = new ArticleUploader(article, this.zendeskClient);
+
+                return uploader.create()
+                    .then(() => {
+                        expect(resource.meta.update)
+                            .to.have.been.calledWith({zendeskId: 54321});
+                    });
+            });
+
+            it('should reject the promise if one of the uploads fails', () => {
+                const article = testUtils.createArticle({meta: {zendeskId: 123456}});
+                article.resources = [
+                    testUtils.createResource(),
+                    testUtils.createResource()
+                ];
+                this.zendeskClient.articleattachments.create.onSecondCall().rejects({error: 'error'});
+                const uploader = new ArticleUploader(article, this.zendeskClient);
+
+                return expect(uploader.create())
+                    .to.be.rejectedWith({error: 'error'});
+            });
+
+            it('should write the resource metadata if resources were created', () => {
+                const article = testUtils.createArticle({meta: {zendeskId: 123456}});
+                const resource = testUtils.createResource();
+                article.resources = [resource];
+                const uploader = new ArticleUploader(article, this.zendeskClient);
+
+                return uploader.create()
+                    .then(() => {
+                        expect(resource.meta.write)
+                            .to.have.been.called;
+                    });
+            });
+
+            it('should not write the resource metadata if resources were not created', () => {
+                const article = testUtils.createArticle({meta: {zendeskId: 123456}});
+                const resource = testUtils.createResource();
+                article.resources = [];
+                const uploader = new ArticleUploader(article, this.zendeskClient);
+
+                return uploader.create()
+                    .then(() => {
+                        expect(resource.meta.write)
+                            .to.not.have.been.called;
+                    });
+            });
+        });
     });
 
     describe('sync', () => {
@@ -164,7 +334,7 @@ describe('ArticleUploader', () => {
 
         it('should reject the promise when the update article API returns an error', () => {
             const section = testUtils.createArticle();
-            let error = {
+            const error = {
                 error: 'error message'
             };
             this.zendeskClient.articles.update.rejects(error);
