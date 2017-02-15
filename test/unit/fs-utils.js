@@ -180,8 +180,8 @@ describe('fs-utils', () => {
 
             return fsu.findFilesOfTypes('dir', ['.foo'])
                 .then(files => {
-                    expect(files['foo']).to.have.length(1);
-                    expect(files['foo'][0]).to.match(/file.foo/);
+                    expect(files).to.have.length(1);
+                    expect(files[0]).to.match(/file.foo/);
                 });
         });
 
@@ -194,26 +194,9 @@ describe('fs-utils', () => {
 
             return fsu.findFilesOfTypes('dir', ['.foo'])
                 .then(files => {
-                    const file = files['foo'][0];
+                    const file = files[0];
 
                     expect(file).to.match(/^dir/);
-                });
-        });
-
-        it('should group files by extensions', () => {
-            mockFs({
-                dir: {
-                    'file.foo': 'content',
-                    'file.bar': 'content'
-                }
-            });
-
-            return fsu.findFilesOfTypes('dir', ['.foo', '.bar'])
-                .then(files => {
-                    expect(files).to.be.eql({
-                        foo: ['dir/file.foo'],
-                        bar: ['dir/file.bar']
-                    });
                 });
         });
 
@@ -226,7 +209,7 @@ describe('fs-utils', () => {
 
             return fsu.findFilesOfTypes('dir', ['.foo'])
                 .then(files => {
-                    expect(files).to.not.have.property('bar');
+                    expect(files).have.length(0);
                 });
         });
 
@@ -239,7 +222,7 @@ describe('fs-utils', () => {
 
             return fsu.findFilesOfTypes('dir', ['.foo'])
                 .then(files => {
-                    expect(files).to.not.have.property('foo');
+                    expect(files).to.have.length(0);
                 });
         });
 
@@ -251,9 +234,9 @@ describe('fs-utils', () => {
             });
 
             return expect(fsu.findFilesOfTypes('dir', '.foo'))
-                .to.eventually.become({
-                    'foo': ['dir/file.foo']
-                });
+                .to.eventually.become([
+                    'dir/file.foo'
+                ]);
         });
 
         it('should support extensions passed as string not beginning with dot', () => {
@@ -264,9 +247,9 @@ describe('fs-utils', () => {
             });
 
             return expect(fsu.findFilesOfTypes('dir', 'foo'))
-                .to.eventually.become({
-                    'foo': ['dir/file.foo']
-                });
+                .to.eventually.become([
+                    'dir/file.foo'
+                ]);
         });
 
         it('should ignore empty strings in extensions', () => {
@@ -277,7 +260,7 @@ describe('fs-utils', () => {
             });
 
             return expect(fsu.findFilesOfTypes('dir', ['']))
-                .to.eventually.become({});
+                .to.eventually.become([]);
         });
 
         it('should ignore extensions passed as non-string extensions', () => {
@@ -288,7 +271,7 @@ describe('fs-utils', () => {
             });
 
             return expect(fsu.findFilesOfTypes('dir', {}))
-                .to.eventually.become({});
+                .to.eventually.become([]);
         });
     });
 });

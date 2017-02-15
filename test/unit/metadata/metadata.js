@@ -229,14 +229,14 @@ describe('Metadata', () => {
                 });
         });
 
-        it('should do nothing if meta was not read', () => {
+        it('should update meta state even if read was not called', () => {
             const userScheme = Dictionary.createRoot(new Property('foo'));
             const systemScheme = Dictionary.createRoot(new Property('fizz'));
             const metadata = new Metadata('dir', userScheme, systemScheme);
 
             metadata.update({fizz: 'FUBAR'});
 
-            expect(metadata).to.not.have.property('fizz');
+            expect(metadata).to.have.property('fizz', 'FUBAR');
         });
     });
 
@@ -294,7 +294,7 @@ describe('Metadata', () => {
         });
     });
 
-    describe('currentHash', () => {
+    describe('userMetaHash', () => {
         it('should return hash of stringified user meta', () => {
             mockFs({
                 dir: {
@@ -310,7 +310,7 @@ describe('Metadata', () => {
                 .then(() => {
                     const expected = hash(JSON.stringify({foo: 'bar'}));
 
-                    expect(metadata.currentHash).to.be.equal(expected);
+                    expect(metadata.userMetaHash).to.be.equal(expected);
                 });
         });
     });

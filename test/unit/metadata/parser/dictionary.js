@@ -87,6 +87,19 @@ describe('Dictionary', () => {
         });
     });
 
+    describe('getAllKeys', () => {
+        it('should return all first-level keys of the parser', () => {
+            const dictionary = new Dictionary('top_key', [
+                createDummyParser_({key: 'foo'}),
+                createDummyParser_({key: 'bar'})
+            ]);
+
+            expect(dictionary.getAllKeys()).to.have.length(2)
+                .and.to.include('foo')
+                .and.to.include('bar');
+        });
+    });
+
     describe('parse', () => {
         it('should throw if passed json has unexpected keys', () => {
             const section = new Dictionary('key', createDummyParser_({key: 'foo'}));

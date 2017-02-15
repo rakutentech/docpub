@@ -83,7 +83,7 @@ describe('Documentation directory reading', () => {
                     expect(section.meta).to.have.property('zendeskId', 1);
                     expect(section.meta).to.have.property('hash', 'abcdef');
                     expect(article.meta.resources).to.be.eql({
-                        'content.md': {
+                        'picture.jpg': {
                             'zendeskId': 2,
                             'hash': 'abcdef'
                         }
@@ -100,12 +100,14 @@ describe('Documentation directory reading', () => {
                     const section = category.sections[0];
                     const article = section.articles[0];
 
-                    expect(article.resources).to.be.eql({
-                        pdf: [path.resolve(dirPath, 'section/article/document.pdf')],
-                        jpg: [path.resolve(dirPath, 'section/article/picture.jpg')],
-                        jpeg: [path.resolve(dirPath, 'section/article/picture.jpeg')],
-                        png: [path.resolve(dirPath, 'section/article/picture.png')]
-                    });
+                    expect(article.resources).to.have.length(4);
+
+                    const paths = article.resources.map(resource => resource.path);
+                    expect(paths)
+                        .to.match(/section\/article\/document.pdf/)
+                        .and.to.match(/section\/article\/picture.jpg/)
+                        .and.to.match(/section\/article\/picture.jpeg/)
+                        .and.to.match(/section\/article\/picture.png/);
 
                     return article.convertMarkdown();
                 })

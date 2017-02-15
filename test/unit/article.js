@@ -1,8 +1,10 @@
 const _ = require('lodash');
 const mockFs = require('mock-fs');
-const Article = require('../../lib/article');
 const Section = require('../../lib/section');
+const Article = require('../../lib/article');
+const Resource = require('../../lib/resource');
 const fsu = require('../../lib/fs-utils.js');
+const hash = require('../../lib/hash');
 const MarkdownRenderer = require('../../lib/md-renderer');
 const metadata = require('../../lib/metadata');
 const Metadata = require('../../lib/metadata/metadata');
@@ -16,6 +18,7 @@ describe('Article', () => {
 
     afterEach(() => {
         sandbox.restore();
+        mockFs.restore();
     });
 
     describe('constructor', () => {
@@ -69,11 +72,80 @@ describe('Article', () => {
         });
     });
 
-    describe('read', () => {
-        afterEach(() => {
-            mockFs.restore();
+    // Sinon < 2.0.0 does not support stubbing getters, so we have to redefine properties in order to mock behavior
+    describe('isChanged', () => {
+        it('should return true if article hash differes from article userMetaHash', () => {
+            const article = createArticle_();
+
+            Object.defineProperty(article, 'hash', {value: 'abcdef'});
+            article.meta = {userMetaHash: `0a1b2c`};
+
+            expect(article.isChanged).to.be.true;
         });
 
+        it('should return false if article has same hash and userMetaHash and article has no child resources', () => {
+            const article = createArticle_();
+
+            Object.defineProperty(article, 'hash', {value: 'abcdef'});
+            article.meta = {userMetaHash: `abcdef`};
+
+            article.setChildren([]);
+
+            expect(article.isChanged).to.be.false;
+        });
+
+        it('should return true if article has same hash and currentHash but one of child resources changed', () => {
+            const article = createArticle_();
+            const resource = new Resource('path', article);
+
+            article.meta = {userMetaHash: `abcdef`};
+            Object.defineProperty(article, 'hash', {value: 'abcdef'});
+
+            Object.defineProperty(resource, 'isChanged', {value: true});
+
+            article.setChildren([resource]);
+
+            expect(article.isChanged).to.be.true;
+        });
+
+        it('should return false if document has same hash and currentHash and no child resources changed', () => {
+            const article = createArticle_();
+            const resource = new Resource('path', article);
+
+            article.meta = {userMetaHash: `abcdef`};
+            Object.defineProperty(article, 'hash', {value: 'abcdef'});
+
+            Object.defineProperty(resource, 'isChanged', {value: false});
+
+            article.setChildren([resource]);
+
+            expect(article.isChanged).to.be.false;
+        });
+    });
+
+    describe('hash', () => {
+        it('should calculate article hash as hash of user meta hash + markdown content hash + parent section id', () => {
+            mockFs({
+                'content.md': 'content_goes_here'
+            });
+
+            const section = sinon.createStubInstance(Section);
+            section.meta = {zendeskId: 123456};
+
+            const article = new Article('.', section);
+
+            const expectedHash = hash('abcdef' + hash('content_goes_here') + '123456');
+
+            return article.read()
+                .then(() => {
+                    Object.defineProperty(article.meta, 'userMetaHash', {value: 'abcdef'});
+
+                    expect(article.hash).to.be.equal(expectedHash);
+                });
+        });
+    });
+
+    describe('read', () => {
         it('should load metadata from file named `meta.json`', () => {
             mockFs({
                 'content.md': `content_goes_here`
@@ -122,6 +194,65 @@ describe('Article', () => {
                 .to.be.rejectedWith(/more than 1 markdown/);
         });
 
+        it('should reject if failed to read markdown contents', () => {
+            mockFs({
+                'content.md': mockFs.file({
+                    mode: '0000',
+                    content: 'content_goes_here'
+                })
+            });
+
+            const article = createArticle_('.');
+
+            return expect(article.read())
+                .to.be.rejectedWith(/EACCES/);
+        });
+
+        it('should load article resources', () => {
+            mockFs({
+                'content.md': `content_goes_here`,
+                'image.jpg': 'image_bytes_here'
+            });
+
+            const article = createArticle_();
+
+            return article.read()
+                .then(() => {
+                    expect(article.resources).to.have.length(1);
+                });
+        });
+
+        it('should load resources as `Resource` instances', () => {
+            mockFs({
+                'content.md': `content_goes_here`,
+                'image.jpg': 'image_bytes_here'
+            });
+
+            const article = createArticle_();
+
+            return article.read()
+                .then(() => {
+                    expect(article.resources[0]).to.be.instanceOf(Resource);
+                });
+        });
+
+        it('should initialise resources with correct resource paths', () => {
+            mockFs({
+                'path/to/article': {
+                    'content.md': 'content_goes_here',
+                    'image.jpg': 'image_bytes_here'
+                }
+            });
+
+            const article = createArticle_({path: 'path/to/article'});
+
+            return article.read()
+                .then(() => {
+                    expect(article.resources[0].path)
+                        .to.be.equal('path/to/article/image.jpg');
+                });
+        });
+
         it('should search for article resources in `.jpg` format', () => {
             mockFs({
                 'content.md': `content_goes_here`,
@@ -132,9 +263,9 @@ describe('Article', () => {
 
             return article.read()
                 .then(() => {
-                    expect(article.resources.jpg)
-                        .to.have.length(1)
-                        .and.to.include('image.jpg');
+                    expect(article.resources).to.have.length(1);
+                    expect(article.resources[0].path)
+                        .to.include('image.jpg');
                 });
         });
 
@@ -148,9 +279,9 @@ describe('Article', () => {
 
             return article.read()
                 .then(() => {
-                    expect(article.resources.jpeg)
-                        .to.have.length(1)
-                        .and.to.include('image.jpeg');
+                    expect(article.resources).to.have.length(1);
+                    expect(article.resources[0].path)
+                        .to.include('image.jpeg');
                 });
         });
 
@@ -164,9 +295,9 @@ describe('Article', () => {
 
             return article.read()
                 .then(() => {
-                    expect(article.resources.png)
-                        .to.have.length(1)
-                        .and.to.include('image.png');
+                    expect(article.resources).to.have.length(1);
+                    expect(article.resources[0].path)
+                        .to.include('image.png');
                 });
         });
 
@@ -180,9 +311,9 @@ describe('Article', () => {
 
             return article.read()
                 .then(() => {
-                    expect(article.resources.gif)
-                        .to.have.length(1)
-                        .and.to.include('image.gif');
+                    expect(article.resources).to.have.length(1);
+                    expect(article.resources[0].path)
+                        .to.include('image.gif');
                 });
         });
 
@@ -196,9 +327,9 @@ describe('Article', () => {
 
             return article.read()
                 .then(() => {
-                    expect(article.resources.svg)
-                        .to.have.length(1)
-                        .and.to.include('image.svg');
+                    expect(article.resources).to.have.length(1);
+                    expect(article.resources[0].path)
+                        .to.include('image.svg');
                 });
         });
 
@@ -212,9 +343,9 @@ describe('Article', () => {
 
             return article.read()
                 .then(() => {
-                    expect(article.resources.pdf)
-                        .to.have.length(1)
-                        .and.to.include('image.pdf');
+                    expect(article.resources).to.have.length(1);
+                    expect(article.resources[0].path)
+                        .to.include('image.pdf');
                 });
         });
 
@@ -233,14 +364,32 @@ describe('Article', () => {
 
             return article.read()
                 .then(() => {
-                    expect(article.resources).to.be.eql({
-                        jpg: ['image.jpg'],
-                        jpeg: ['image.jpeg'],
-                        png: ['image.png'],
-                        gif: ['image.gif'],
-                        svg: ['image.svg'],
-                        pdf: ['image.pdf']
-                    });
+                    const paths = article.resources.map(resource => resource.path);
+
+                    expect(paths)
+                        .to.match(/image.jpg/)
+                        .and.to.match(/image.jpeg/)
+                        .and.to.match(/image.png/)
+                        .and.to.match(/image.gif/)
+                        .and.to.match(/image.svg/)
+                        .and.to.match(/image.pdf/);
+                });
+        });
+
+        it('should start reading of all the resources contents', () => {
+            mockFs({
+                'content.md': `content_goes_here`,
+                'image.pdf': 'image_bytes_here',
+                'image.png': 'image_bytes_here'
+            });
+
+            sandbox.stub(Resource.prototype, 'read').resolves();
+
+            const article = createArticle_();
+
+            return article.read()
+                .then(() => {
+                    expect(Resource.prototype.read).to.be.calledTwice;
                 });
         });
     });

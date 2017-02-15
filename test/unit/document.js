@@ -2,6 +2,12 @@ const _ = require('lodash');
 const Document = require('../../lib/document');
 
 describe('Document', () => {
+    const sandbox = sinon.sandbox.create();
+
+    afterEach(() => {
+        sandbox.restore();
+    });
+
     describe('constructor', () => {
         it('should throw if path is not string', () => {
             const path = {};
@@ -32,13 +38,71 @@ describe('Document', () => {
         });
     });
 
-    describe('read', () => {
-        const sandbox = sinon.sandbox.create();
+    describe('isNew', () => {
+        it('should return false if document has no meta defined', () => {
+            const document = new Document('path');
 
-        afterEach(() => {
-            sandbox.restore();
+            expect(document.isNew).to.be.false;
         });
 
+        it('should return true if document has zendeskId equal to 0', () => {
+            const document = new Document('path');
+            document.meta = {zendeskId: 0};
+
+            expect(document.isNew).to.be.true;
+        });
+
+        it('should return false if document has zendeskId different from 0', () => {
+            const document = new Document('path');
+            document.meta = {zendeskId: 123456};
+
+            expect(document.isNew).to.be.false;
+        });
+    });
+
+    describe('isChanged', () => {
+        it('should return false if document has no meta defined', () => {
+            const document = new Document('path');
+
+            expect(document.isChanged).to.be.false;
+        });
+
+        it('should return true if document hash differes from document meta.userMetaHash', () => {
+            const document = new Document('path');
+
+            Object.defineProperty(document, 'hash', {value: 'abcdef'});
+            document.meta = {userMetaHash: `a0b1c2`};
+
+            expect(document.isChanged).to.be.true;
+        });
+
+        it('should return false if document has same hash and meta.userMetaHash', () => {
+            const document = new Document('path');
+
+            Object.defineProperty(document, 'hash', {value: 'abcdef'});
+            document.meta = {userMetaHash: `abcdef`};
+
+            expect(document.isChanged).to.be.false;
+        });
+    });
+
+    describe('hash', () => {
+        it('should return empty string if document has no meta defined', () => {
+            const document = new Document('path');
+
+            expect(document.hash).to.be.equal('');
+        });
+
+        it('should return user meta hash if meta defined', () => {
+            const document = new Document('path');
+
+            document.meta = {userMetaHash: 'abcdef'};
+
+            expect(document.hash).to.be.equal('abcdef');
+        });
+    });
+
+    describe('read', () => {
         it('should read metadata', () => {
             const doc = new Document('some_path');
             doc.meta = {read: sandbox.stub().resolves()};
@@ -48,6 +112,50 @@ describe('Document', () => {
                     expect(doc.meta.read).to.be.calledOnce;
                 });
         });
+    });
+
+    describe('updateHash', () => {
+        it('should update hash in meta with own hash', () => {
+            const document = new Document('path');
+
+            document.meta = createMetaStub_();
+            document.meta.userMetaHash = 'abcdef';
+
+            return document.updateHash()
+                .then(() => {
+                    expect(document.meta.update)
+                        .to.be.calledWith({hash: 'abcdef'});
+                });
+        });
+
+        it('should write updated meta to the disc', () => {
+            const document = new Document('path');
+
+            document.meta = createMetaStub_();
+
+            return document.updateHash()
+                .then(() => {
+                    expect(document.meta.write)
+                        .to.be.calledOnce;
+                });
+        });
+
+        it('should reject promise if write failed', () => {
+            const document = new Document('path');
+
+            document.meta = createMetaStub_();
+            document.meta.write.rejects('Error');
+
+            return expect(document.updateHash())
+                .to.be.rejectedWith('Error');
+        });
+
+        function createMetaStub_() {
+            return {
+                update: sandbox.stub(),
+                write: sandbox.stub().resolves()
+            };
+        }
     });
 
     describe('setChildren', () => {
@@ -153,44 +261,6 @@ describe('Document', () => {
             const document = buildDocumentTree_({id: 123});
 
             expect(document.findByPath()).to.be.equal(123);
-        });
-    });
-
-    describe('isNew', () => {
-        it('should return true if document has zendeskId equal to 0', () => {
-            const document = new Document('path');
-            document.meta = {zendeskId: 0};
-
-            expect(document.isNew).to.be.true;
-        });
-
-        it('should return false if document has zendeskId different from 0', () => {
-            const document = new Document('path');
-            document.meta = {zendeskId: 123456};
-
-            expect(document.isNew).to.be.false;
-        });
-    });
-
-    describe('isChanged', () => {
-        it('should return true if document hash differes from document currentHash', () => {
-            const document = new Document('path');
-            document.meta = {
-                hash: `123456`,
-                currentHash: `456789`
-            };
-
-            expect(document.isChanged).to.be.true;
-        });
-
-        it('should return false if document has same hash and currentHash', () => {
-            const document = new Document('path');
-            document.meta = {
-                hash: `123456`,
-                currentHash: `123456`
-            };
-
-            expect(document.isChanged).to.be.false;
         });
     });
 });
