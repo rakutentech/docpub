@@ -30,27 +30,27 @@
     "preversion": "npm run lint && npm test"
   },
   "dependencies": {
-    "bluebird": "^3.4.7",
-    "commander": "^2.9.0",
-    "fs-promise": "^1.0.0",
-    "highlight.js": "^9.9.0",
-    "lodash": "^4.17.4",
-    "markdown-it": "^8.2.2",
+    "bluebird": "3.4.7",
+    "commander": "2.9.0",
+    "fs-promise": "2.0.0",
+    "highlight.js": "9.9.0",
+    "lodash": "4.17.4",
+    "markdown-it": "8.2.2",
     "markdown-it-github-toc": "3.1.0",
     "node-zendesk": "1.1.12"
   },
   "devDependencies": {
-    "chai": "^3.5.0",
-    "chai-as-promised": "^6.0.0",
-    "dotenv": "^4.0.0",
-    "eslint": "^3.13.1",
-    "husky": "^0.13.1",
-    "istanbul": "^0.4.5",
-    "mocha": "^3.2.0",
-    "mock-fs": "^3.12.1",
-    "proxyquire": "^1.7.10",
-    "sinon": "^1.17.7",
-    "sinon-as-promised": "^4.0.2",
-    "sinon-chai": "^2.8.0"
+    "chai": "3.5.0",
+    "chai-as-promised": "6.0.0",
+    "dotenv": "4.0.0",
+    "eslint": "3.15.0",
+    "husky": "0.13.1",
+    "istanbul": "0.4.5",
+    "mocha": "3.2.0",
+    "mock-fs": "3.12.1",
+    "proxyquire": "1.7.11",
+    "sinon": "1.17.7",
+    "sinon-as-promised": "4.0.2",
+    "sinon-chai": "2.8.0"
   }
 }
