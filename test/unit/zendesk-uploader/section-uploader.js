@@ -175,12 +175,7 @@ describe('SectionUploader', () => {
 
     describe('sync', () => {
         it('should update a section if it has been changed', () => {
-            const section = testUtils.createSection({
-                meta: {
-                    zendeskId: 12345
-                },
-                isChanged: sinon.stub().resolves(true)
-            });
+            const section = testUtils.createSection({isChanged: true});
             const uploader = new SectionUploader(section, this.zendeskClient);
 
             return uploader.sync()
@@ -190,13 +185,28 @@ describe('SectionUploader', () => {
                 });
         });
 
+        it('should update section hash after updating section if section was changed', () => {
+            const section = testUtils.createSection({isChanged: true});
+            const uploader = new SectionUploader(section, this.zendeskClient);
+
+            return uploader.sync()
+                .then(() => {
+                    expect(section.updateHash).to.be.calledOnce;
+                });
+        });
+
+        it('should reject if failed to update section hash', () => {
+            const section = testUtils.createSection({isChanged: true});
+            const uploader = new SectionUploader(section, this.zendeskClient);
+
+            section.updateHash.rejects('Error');
+
+            return expect(uploader.sync())
+                .to.be.rejectedWith('Error');
+        });
+
         it('should not update a section if it has not been changed', () => {
-            const section = testUtils.createSection({
-                meta: {
-                    zendeskId: 12345
-                },
-                isChanged: sinon.stub().resolves(false)
-            });
+            const section = testUtils.createSection({isChanged: false});
             const uploader = new SectionUploader(section, this.zendeskClient);
 
             return uploader.sync()
@@ -206,13 +216,22 @@ describe('SectionUploader', () => {
                 });
         });
 
+        it('should not update section hash if section has not been changed', () => {
+            const section = testUtils.createSection({isChanged: false});
+            const uploader = new SectionUploader(section, this.zendeskClient);
+
+            return uploader.sync()
+                .then(() => {
+                    expect(section.updateHash).to.be.not.called;
+                });
+        });
+
         it('should reject the promise when the update section API returns an error', () => {
             const section = testUtils.createSection();
-            let error = {
-                error: 'error message'
-            };
-            this.zendeskClient.sections.update.rejects(error);
+            const error = {error: 'error message'};
             const uploader = new SectionUploader(section, this.zendeskClient);
+
+            this.zendeskClient.sections.update.rejects(error);
 
             return expect(uploader.sync())
                 .to.be.rejectedWith(error);
@@ -443,4 +462,3 @@ describe('SectionUploader', () => {
         });
     });
 });
-

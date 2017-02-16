@@ -271,7 +271,7 @@ describe('ArticleUploader', () => {
                     .to.be.rejectedWith({error: 'error'});
             });
 
-            it('should write the resource metadata if resources were created', () => {
+            it('should write the article metadata after all resources were uploaded', () => {
                 const article = testUtils.createArticle({meta: {zendeskId: 123456}});
                 const resource = testUtils.createResource();
                 article.resources = [resource];
@@ -279,21 +279,8 @@ describe('ArticleUploader', () => {
 
                 return uploader.create()
                     .then(() => {
-                        expect(resource.meta.write)
-                            .to.have.been.called;
-                    });
-            });
-
-            it('should not write the resource metadata if resources were not created', () => {
-                const article = testUtils.createArticle({meta: {zendeskId: 123456}});
-                const resource = testUtils.createResource();
-                article.resources = [];
-                const uploader = new ArticleUploader(article, this.zendeskClient);
-
-                return uploader.create()
-                    .then(() => {
-                        expect(resource.meta.write)
-                            .to.not.have.been.called;
+                        expect(article.meta.write)
+                            .to.have.been.calledOnce;
                     });
             });
         });
@@ -301,12 +288,7 @@ describe('ArticleUploader', () => {
 
     describe('sync', () => {
         it('should update the article if it has changed', () => {
-            const article = testUtils.createArticle({
-                meta: {
-                    zendeskId: 1234
-                },
-                isChanged: sinon.stub().resolves(true)
-            });
+            const article = testUtils.createArticle({isChanged: true});
             const uploader = new ArticleUploader(article, this.zendeskClient);
 
             return uploader.sync()
@@ -316,13 +298,28 @@ describe('ArticleUploader', () => {
                 });
         });
 
+        it('should update article hash after updating article if article was changed', () => {
+            const article = testUtils.createArticle({isChanged: true});
+            const uploader = new ArticleUploader(article, this.zendeskClient);
+
+            return uploader.sync()
+                .then(() => {
+                    expect(article.updateHash).to.be.calledOnce;
+                });
+        });
+
+        it('should reject if failed to update article hash', () => {
+            const article = testUtils.createArticle({isChanged: true});
+            const uploader = new ArticleUploader(article, this.zendeskClient);
+
+            article.updateHash.rejects('Error');
+
+            return expect(uploader.sync())
+                .to.be.rejectedWith('Error');
+        });
+
         it('should not update the article if it has not changed', () => {
-            const article = testUtils.createArticle({
-                meta: {
-                    zendeskId: 1234
-                },
-                isChanged: sinon.stub().resolves(false)
-            });
+            const article = testUtils.createArticle({isChanged: false});
             const uploader = new ArticleUploader(article, this.zendeskClient);
 
             return uploader.sync()
@@ -332,13 +329,22 @@ describe('ArticleUploader', () => {
                 });
         });
 
+        it('should not update article hash if article has not been changed', () => {
+            const article = testUtils.createCategory({isChanged: false});
+            const uploader = new ArticleUploader(article, this.zendeskClient);
+
+            return uploader.sync()
+                .then(() => {
+                    expect(article.updateHash).to.be.not.called;
+                });
+        });
+
         it('should reject the promise when the update article API returns an error', () => {
             const section = testUtils.createArticle();
-            const error = {
-                error: 'error message'
-            };
-            this.zendeskClient.articles.update.rejects(error);
+            const error = {error: 'error message'};
             const uploader = new ArticleUploader(section, this.zendeskClient);
+
+            this.zendeskClient.articles.update.rejects(error);
 
             return expect(uploader.sync())
                 .to.be.rejectedWith(error);

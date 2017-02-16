@@ -198,12 +198,7 @@ describe('CategoryUploader', () => {
 
     describe('sync', () => {
         it('should update a category if it has been changed', () => {
-            const category = testUtils.createCategory({
-                meta: {
-                    zendeskId: 12345
-                },
-                isChanged: sinon.stub().resolves(true)
-            });
+            const category = testUtils.createCategory({isChanged: true});
             const uploader = new CategoryUploader(category, this.zendeskClient);
 
             return uploader.sync()
@@ -213,13 +208,28 @@ describe('CategoryUploader', () => {
                 });
         });
 
+        it('should update category hash after updating category if category was changed', () => {
+            const category = testUtils.createCategory({isChanged: true});
+            const uploader = new CategoryUploader(category, this.zendeskClient);
+
+            return uploader.sync()
+                .then(() => {
+                    expect(category.updateHash).to.be.calledOnce;
+                });
+        });
+
+        it('should reject if failed to update category hash', () => {
+            const category = testUtils.createCategory({isChanged: true});
+            const uploader = new CategoryUploader(category, this.zendeskClient);
+
+            category.updateHash.rejects('Error');
+
+            return expect(uploader.sync())
+                .to.be.rejectedWith('Error');
+        });
+
         it('should not update a category if it has not been changed', () => {
-            const category = testUtils.createCategory({
-                meta: {
-                    zendeskId: 12345
-                },
-                isChanged: sinon.stub().resolves(false)
-            });
+            const category = testUtils.createCategory({isChanged: false});
             const uploader = new CategoryUploader(category, this.zendeskClient);
 
             return uploader.sync()
@@ -229,13 +239,22 @@ describe('CategoryUploader', () => {
                 });
         });
 
+        it('should not update category hash if category has not been changed', () => {
+            const category = testUtils.createCategory({isChanged: false});
+            const uploader = new CategoryUploader(category, this.zendeskClient);
+
+            return uploader.sync()
+                .then(() => {
+                    expect(category.updateHash).to.be.not.called;
+                });
+        });
+
         it('should reject the promise when the update category API returns an error', () => {
             const category = testUtils.createCategory();
-            let error = {
-                error: 'error message'
-            };
-            this.zendeskClient.categories.update.rejects(error);
+            const error = {error: 'error message'};
             const uploader = new CategoryUploader(category, this.zendeskClient);
+
+            this.zendeskClient.categories.update.rejects(error);
 
             return expect(uploader.sync())
                 .to.be.rejectedWith(error);

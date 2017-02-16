@@ -114,6 +114,20 @@ describe('Resource', () => {
         });
     });
 
+    describe('updateHash', () => {
+        it('should update meta with own hash', () => {
+            const resource = createResource_();
+
+            Object.defineProperty(resource, 'hash', {value: 'abcdef'});
+            sandbox.stub(resource.meta, 'update');
+
+            return resource.updateHash()
+                .then(() => {
+                    expect(resource.meta.update).to.be.calledWith({hash: 'abcdef'});
+                });
+        });
+    });
+
     function createResource_(path) {
         path = path || '.';
 

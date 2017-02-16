@@ -10,7 +10,8 @@ function createArticle(opts) {
             write: sinon.stub().resolves()
         },
         convertMarkdown: sinon.stub().resolves('<p>Lorem ipsum dolor sit amet</p>'),
-        isChanged: sinon.stub().resolves(true)
+        isChanged: true,
+        updateHash: sinon.stub().resolves()
     });
     article.section = opts.section || createSection({
         articles: article,
@@ -33,7 +34,8 @@ function createSection(opts) {
             update: sinon.stub().returns(),
             write: sinon.stub().resolves()
         },
-        isChanged: sinon.stub().resolves(true)
+        isChanged: true,
+        updateHash: sinon.stub().resolves()
     });
     section.articles = [].concat(opts.articles || [
         createArticle({section: section}),
@@ -58,7 +60,8 @@ function createCategory(opts) {
             update: sinon.stub().returns(),
             write: sinon.stub().resolves()
         },
-        isChanged: sinon.stub().resolves(true)
+        isChanged: true,
+        updateHash: sinon.stub().resolves()
     });
     category.sections = [].concat(opts.sections || [
         createSection({category: category}),

@@ -118,8 +118,7 @@ describe('Document', () => {
         it('should update hash in meta with own hash', () => {
             const document = new Document('path');
 
-            document.meta = createMetaStub_();
-            document.meta.userMetaHash = 'abcdef';
+            document.meta = buildMeta_('abcdef');
 
             return document.updateHash()
                 .then(() => {
@@ -131,7 +130,7 @@ describe('Document', () => {
         it('should write updated meta to the disc', () => {
             const document = new Document('path');
 
-            document.meta = createMetaStub_();
+            document.meta = buildMeta_();
 
             return document.updateHash()
                 .then(() => {
@@ -140,20 +139,21 @@ describe('Document', () => {
                 });
         });
 
-        it('should reject promise if write failed', () => {
+        it('should reject if error happened on meta write', () => {
             const document = new Document('path');
 
-            document.meta = createMetaStub_();
+            document.meta = buildMeta_();
             document.meta.write.rejects('Error');
 
             return expect(document.updateHash())
                 .to.be.rejectedWith('Error');
         });
 
-        function createMetaStub_() {
+        function buildMeta_(hash) {
             return {
                 update: sandbox.stub(),
-                write: sandbox.stub().resolves()
+                write: sandbox.stub().resolves(),
+                userMetaHash: hash || 'defaultHash'
             };
         }
     });

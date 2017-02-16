@@ -393,6 +393,69 @@ describe('Article', () => {
                 });
         });
     });
+
+    describe('updateHash', () => {
+        beforeEach(() => {
+            sandbox.spy(Metadata.prototype, 'update');
+            sandbox.stub(Metadata.prototype, 'write').resolves();
+        });
+
+        it('should update hash in meta with own hash', () => {
+            const article = createArticle_();
+            Object.defineProperty(article, 'hash', {value: 'abcdef'});
+
+            return article.updateHash()
+                .then(() => {
+                    expect(article.meta.update)
+                        .to.be.calledWith({hash: 'abcdef'});
+                });
+        });
+
+        it('should update hashes of all its resources', () => {
+            const article = createArticle_();
+            Object.defineProperty(article, 'hash', {value: 'abcdef'});
+
+            const resource = new Resource('res_name', article);
+            Object.defineProperty(resource, 'hash', {value: '123abc'});
+
+            const anotherResource = new Resource('another_res_name', article);
+            Object.defineProperty(anotherResource, 'hash', {value: '456def'});
+
+            article.setChildren([resource, anotherResource]);
+
+            return article.updateHash()
+                .then(() => {
+                    expect(article.meta.update).to.be.calledThrice; // 1 more call for own hash update
+                    expect(article.meta.resources)
+                        .to.be.eql({
+                            'res_name': {hash: '123abc'},
+                            'another_res_name': {hash: '456def'}
+                        });
+                });
+        });
+
+        it('should write updated meta to the disc', () => {
+            const article = createArticle_();
+            Object.defineProperty(article, 'hash', {value: 'abcdef'});
+
+            return article.updateHash()
+                .then(() => {
+                    expect(article.meta.write)
+                        .to.be.calledOnce;
+                });
+        });
+
+        it('should reject promise if write failed', () => {
+            const article = createArticle_();
+            Object.defineProperty(article, 'hash', {value: 'abcdef'});
+
+            article.meta.write.rejects('Error');
+
+            return expect(article.updateHash())
+                .to.be.rejectedWith('Error');
+        });
+    });
+
     describe('convertMarkdown', () => {
         it('should reject if article contents were not yet read', () => {
             const article = createArticle_();

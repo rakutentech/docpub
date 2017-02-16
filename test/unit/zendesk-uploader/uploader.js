@@ -1,3 +1,4 @@
+const Promise = require('bluebird');
 const Uploader = require('../../../lib/zendesk-uploader/uploader');
 const apiUtils = require('../../../lib/zendesk-uploader/api-utils');
 
@@ -35,7 +36,7 @@ describe('Uploader', () => {
                     title: 'Test Title'
                 }
             };
-            let uploader = new Uploader(document);
+            const uploader = new Uploader(document);
 
             return expect(uploader.create())
                 .to.be.fulfilled;
@@ -43,29 +44,26 @@ describe('Uploader', () => {
     });
 
     describe('sync', () => {
+        it('should return a promise', () => {
+            const document = {isChanged: true};
+
+            const uploader = new Uploader(document);
+            const result = uploader.sync();
+
+            expect(result).to.be.instanceOf(Promise);
+        });
+
         it('should return true if the document has changed', () => {
-            const document = {
-                meta: {
-                    title: 'Test Title',
-                    zendeskId: 12345
-                },
-                isChanged: sinon.stub().resolves(true)
-            };
-            let uploader = new Uploader(document);
+            const document = {isChanged: true};
+            const uploader = new Uploader(document);
 
             return expect(uploader.sync())
                 .to.become(true);
         });
 
         it('should return false if the document has not changed', () => {
-            const document = {
-                meta: {
-                    title: 'Test Title',
-                    zendeskId: 12345
-                },
-                isChanged: sinon.stub().resolves(false)
-            };
-            let uploader = new Uploader(document);
+            const document = {isChanged: false};
+            const uploader = new Uploader(document);
 
             return expect(uploader.sync())
                 .to.become(false);
