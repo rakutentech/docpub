@@ -1,12 +1,13 @@
 const MarkdownRenderer = require('../../../lib/md-renderer');
 const MarkdownIt = require('markdown-it');
+const Document = require('../../../lib/document');
 
 describe('MarkdownRenderer', () => {
     const sandbox = sinon.sandbox.create();
     let mdRenderer = null;
 
     beforeEach(() => {
-        mdRenderer = new MarkdownRenderer();
+        mdRenderer = new MarkdownRenderer(new Document('path'));
     });
 
     afterEach(() => {
@@ -120,6 +121,28 @@ describe('MarkdownRenderer', () => {
             const html = mdRenderer.render(markdown);
 
             expect(html).to.include('<a href="#heading">Heading</a>');
+        });
+
+        it('should convert relative links to Zendesk ID paths', () => {
+            const document = new Document('path');
+            sandbox.stub(document, 'findByPath').returns(12345);
+            const renderer = new MarkdownRenderer(document);
+            const markdown = '[Link](test/article.md)';
+            const html = renderer.render(markdown);
+
+            expect(html)
+                .to.include('href="/hc/articles/12345"');
+        });
+
+        it('should convert relative image paths to Zendesk ID paths', () => {
+            const document = new Document('path');
+            sandbox.stub(document, 'findByPath').returns(12345);
+            const renderer = new MarkdownRenderer(document);
+            const markdown = '![alt text](images/image.jpg "Title Text")';
+            const html = renderer.render(markdown);
+
+            expect(html)
+                .to.include('src="/hc/article_attachments/12345/image.jpg"');
         });
     });
 });
