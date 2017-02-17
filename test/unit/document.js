@@ -263,6 +263,46 @@ describe('Document', () => {
             expect(document.findByPath()).to.be.equal(123);
         });
     });
+
+    describe('flatTree', () => {
+        it('should add document to documents list', () => {
+            const document = new Document('.');
+            const result = document.flatTree();
+
+            expect(result).to.include(document);
+        });
+
+        it('should include document`s children to the list', () => {
+            const document = new Document('doc');
+            const child = new Document('child');
+            const anotherChild = new Document('another_child');
+
+            document.setChildren([child, anotherChild]);
+
+            const result = document.flatTree();
+
+            expect(result).to.include(child)
+                .and.to.include(anotherChild);
+        });
+
+        it('should recursively include children of own children', () => {
+            const root = new Document('parent');
+            let currentChild = root;
+
+            const children = [];
+            for (let i = 0; i < 100; i++) {
+                const child = new Document(`child_${i}`);
+                currentChild.setChildren([child]);
+                children.push(child);
+                currentChild = child;
+            }
+
+            const result = root.flatTree();
+
+            expect(result.length).to.be.equal(101); // because parent also included
+            children.forEach(child => expect(result).to.include(child));
+        });
+    });
 });
 
 function buildDocumentTree_(scheme, parent) {

@@ -23,7 +23,7 @@ describe('Deleter', () => {
         it('should not initialize an instance of zendesk client if one was already passed with the constructor', () => {
             const zendeskClient = sinon.stub().returns({});
             const category = testUtils.createCategory();
-            category.listDocuments = sandbox.stub().returns([]);
+            category.flatTree = sandbox.stub().returns([]);
             sandbox.spy(apiUtils, 'getClient');
             /*eslint-disable no-new*/
             new ZendeskDeleter(category, zendeskClient);
@@ -37,7 +37,7 @@ describe('Deleter', () => {
     describe('delete', () => {
         it('should return a promise on success', () => {
             const category = testUtils.createCategory();
-            category.listDocuments = sandbox.stub().returns([]);
+            category.flatTree = sandbox.stub().returns([]);
             const deleter = new ZendeskDeleter(category, this.zendeskClient);
 
             return expect(deleter.delete())
@@ -47,7 +47,7 @@ describe('Deleter', () => {
         it('should reject with an error when the API returns an error', () => {
             const category = testUtils.createCategory();
             const error = {error: 'error'};
-            category.listDocuments = sandbox.stub().returns([]);
+            category.flatTree = sandbox.stub().returns([]);
             this.zendeskClient.articles.listByCategory.resolves([{id: 123456}]);
             this.zendeskClient.articles.delete.rejects(error);
             const deleter = new ZendeskDeleter(category, this.zendeskClient);
@@ -58,7 +58,7 @@ describe('Deleter', () => {
 
         it('should delete all articles that exist on zendesk but not in the Category tree', () => {
             const category = testUtils.createCategory();
-            category.listDocuments = sandbox.stub().returns([
+            category.flatTree = sandbox.stub().returns([
                 testUtils.createArticle({
                     meta: {zendeskId: 123456}
                 })
@@ -77,7 +77,7 @@ describe('Deleter', () => {
 
         it('should not delete any articles that exist in the category tree', () => {
             const category = testUtils.createCategory();
-            category.listDocuments = sandbox.stub().returns([
+            category.flatTree = sandbox.stub().returns([
                 testUtils.createArticle({
                     meta: {zendeskId: 123456}
                 }),
@@ -98,7 +98,7 @@ describe('Deleter', () => {
 
         it('should delete all sections that exist on zendesk but not in the Category tree', () => {
             const category = testUtils.createCategory();
-            category.listDocuments = sandbox.stub().returns([
+            category.flatTree = sandbox.stub().returns([
                 testUtils.createSection({
                     meta: {zendeskId: 1981}
                 })
@@ -117,7 +117,7 @@ describe('Deleter', () => {
 
         it('should not delete any sections that exist in the Category Tree', () => {
             const category = testUtils.createCategory();
-            category.listDocuments = sandbox.stub().returns([
+            category.flatTree = sandbox.stub().returns([
                 testUtils.createSection({
                     meta: {zendeskId: 1981}
                 }),
@@ -138,7 +138,7 @@ describe('Deleter', () => {
 
         it('should not delete any sections if there are no sections to delete but should still delete articles', () => {
             const category = testUtils.createCategory();
-            category.listDocuments = sandbox.stub().returns([
+            category.flatTree = sandbox.stub().returns([
                 testUtils.createSection({
                     meta: {zendeskId: 1981}
                 }),
@@ -161,7 +161,7 @@ describe('Deleter', () => {
 
         it('should not delete any articles if there are no articles to delete but should still delete sections', () => {
             const category = testUtils.createCategory();
-            category.listDocuments = sandbox.stub().returns([
+            category.flatTree = sandbox.stub().returns([
                 testUtils.createSection({
                     meta: {zendeskId: 1981}
                 }),
@@ -184,7 +184,7 @@ describe('Deleter', () => {
 
         it('should delete sections followed by articles', () => {
             const category = testUtils.createCategory();
-            category.listDocuments = sandbox.stub().returns([
+            category.flatTree = sandbox.stub().returns([
                 testUtils.createSection({
                     meta: {zendeskId: 1981}
                 }),
