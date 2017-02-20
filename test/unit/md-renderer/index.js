@@ -123,6 +123,14 @@ describe('MarkdownRenderer', () => {
             expect(html).to.include('<a href="#heading">Heading</a>');
         });
 
+        it('should not add an <a> tag before the headers', () => {
+            const markdown = '[toc]\n# Heading';
+            const html = mdRenderer.render(markdown);
+            const header = html.match(/<h1 id="heading">.*?<\/h1>/g).pop();
+
+            expect(header).to.not.include('<a');
+        });
+
         it('should convert relative links to Zendesk ID paths', () => {
             const document = new Document('path');
             sandbox.stub(document, 'findByPath').returns(12345);
