@@ -9,6 +9,9 @@ describe('ArticleUploader', () => {
             create: sandbox.stub().resolves({id: 123456, position: 2}),
             update: sandbox.stub().resolves()
         };
+        this.zendeskClient.translations = {
+            updateForArticle: sandbox.stub().resolves({id: 54321})
+        };
         this.zendeskClient.articleattachments = {
             create: sandbox.stub().resolves({id: 54321})
         };
@@ -19,7 +22,7 @@ describe('ArticleUploader', () => {
 
     describe('create', () => {
         it('should create an article if it doesnt exist', () => {
-            const article = testUtils.createArticle();
+            const article = testUtils.createArticle({isNew: true});
             const uploader = new ArticleUploader(article, this.zendeskClient);
 
             return uploader.create()
@@ -29,12 +32,8 @@ describe('ArticleUploader', () => {
                 });
         });
 
-        it('should not create an article if it already exists on Zendesk (has zendeskId)', () => {
-            const article = testUtils.createArticle({
-                meta: {
-                    zendeskId: 1234
-                }
-            });
+        it('should not create an article if it already exists on Zendesk', () => {
+            const article = testUtils.createArticle({isNew: false});
             const uploader = new ArticleUploader(article, this.zendeskClient);
 
             return uploader.create()
@@ -45,7 +44,7 @@ describe('ArticleUploader', () => {
         });
 
         it('should reject the promise with an error when the api returns an error', () => {
-            const article = testUtils.createArticle();
+            const article = testUtils.createArticle({isNew: true});
             const error = {
                 error: 'error message'
             };
@@ -58,9 +57,8 @@ describe('ArticleUploader', () => {
 
         it('should set `locale` metadata to the request', () => {
             const article = testUtils.createArticle({
-                meta: {
-                    locale: 'test-locale'
-                }
+                isNew: true,
+                meta: {locale: 'test-locale'}
             });
             const uploader = new ArticleUploader(article, this.zendeskClient);
 
@@ -75,40 +73,8 @@ describe('ArticleUploader', () => {
                 });
         });
 
-        it('should set the `locale` environment variable to the request if one was not provided', () => {
-            const article = testUtils.createArticle();
-            process.env.ZENDESK_API_LOCALE = 'env-locale';
-            const uploader = new ArticleUploader(article, this.zendeskClient);
-
-            return uploader.create()
-                .then(() => {
-                    expect(this.zendeskClient.articles.create)
-                        .to.have.been.calledWith(sinon.match.any, {
-                            article: sinon.match({
-                                locale: 'env-locale'
-                            })
-                        });
-                    delete process.env.ZENDESK_API_LOCALE;
-                });
-        });
-
-        it('should set US English to the request `locale` if one is not provided and the environment variable is not set', () => {
-            const article = testUtils.createArticle();
-            const uploader = new ArticleUploader(article, this.zendeskClient);
-
-            return uploader.create()
-                .then(() => {
-                    expect(this.zendeskClient.articles.create)
-                        .to.have.been.calledWith(sinon.match.any, {
-                            article: sinon.match({
-                                locale: 'en-us'
-                            })
-                        });
-                });
-        });
-
         it('should update the articles zendeskId meta property', () => {
-            const article = testUtils.createArticle();
+            const article = testUtils.createArticle({isNew: true});
             this.zendeskClient.articles.create.resolves({id: 123456, position: 42});
             const uploader = new ArticleUploader(article, this.zendeskClient);
 
@@ -120,7 +86,7 @@ describe('ArticleUploader', () => {
         });
 
         it('should write the metadata after it has been updated', () => {
-            const article = testUtils.createArticle();
+            const article = testUtils.createArticle({isNew: true});
             this.zendeskClient.articles.create.resolves({id: 123456, position: 42});
             const uploader = new ArticleUploader(article, this.zendeskClient);
 
@@ -133,9 +99,12 @@ describe('ArticleUploader', () => {
 
         describe('resources', () => {
             it('should upload resources to the correct zendeskId', () => {
-                const article = testUtils.createArticle({meta: {zendeskId: 123456}});
+                const article = testUtils.createArticle({
+                    isChanged: true,
+                    meta: {zendeskId: 123456}
+                });
                 article.resources = [
-                    testUtils.createResource()
+                    testUtils.createResource({isNew: true})
                 ];
                 const uploader = new ArticleUploader(article, this.zendeskClient);
 
@@ -147,9 +116,14 @@ describe('ArticleUploader', () => {
             });
 
             it('should pass the resource path when uploading', () => {
-                const article = testUtils.createArticle({meta: {zendeskId: 123456}});
+                const article = testUtils.createArticle({
+                    isChanged: true
+                });
                 article.resources = [
-                    testUtils.createResource({path: './test/test1.jpg'})
+                    testUtils.createResource({
+                        isNew: true,
+                        path: './test/test1.jpg'
+                    })
                 ];
                 const uploader = new ArticleUploader(article, this.zendeskClient);
 
@@ -163,8 +137,14 @@ describe('ArticleUploader', () => {
             it('should upload all new resources', () => {
                 const article = testUtils.createArticle();
                 article.resources = [
-                    testUtils.createResource({isNew: true}),
-                    testUtils.createResource({isNew: true})
+                    testUtils.createResource({
+                        isChanged: false,
+                        isNew: true
+                    }),
+                    testUtils.createResource({
+                        isChanged: false,
+                        isNew: true
+                    })
                 ];
                 const uploader = new ArticleUploader(article, this.zendeskClient);
 
@@ -243,8 +223,8 @@ describe('ArticleUploader', () => {
             });
 
             it('should update the zendeskId after successful upload', () => {
-                const article = testUtils.createArticle();
-                const resource = testUtils.createResource();
+                const article = testUtils.createArticle({isChanged: true});
+                const resource = testUtils.createResource({isNew: true});
                 article.resources = [
                     resource
                 ];
@@ -259,10 +239,12 @@ describe('ArticleUploader', () => {
             });
 
             it('should reject the promise if one of the uploads fails', () => {
-                const article = testUtils.createArticle({meta: {zendeskId: 123456}});
+                const article = testUtils.createArticle({
+                    isChanged: true
+                });
                 article.resources = [
-                    testUtils.createResource(),
-                    testUtils.createResource()
+                    testUtils.createResource({isNew: true}),
+                    testUtils.createResource({isNew: true})
                 ];
                 this.zendeskClient.articleattachments.create.onSecondCall().rejects({error: 'error'});
                 const uploader = new ArticleUploader(article, this.zendeskClient);
@@ -272,8 +254,8 @@ describe('ArticleUploader', () => {
             });
 
             it('should write the article metadata after all resources were uploaded', () => {
-                const article = testUtils.createArticle({meta: {zendeskId: 123456}});
-                const resource = testUtils.createResource();
+                const article = testUtils.createArticle({isChanged: true});
+                const resource = testUtils.createResource({isNew: true});
                 article.resources = [resource];
                 const uploader = new ArticleUploader(article, this.zendeskClient);
 
@@ -287,212 +269,261 @@ describe('ArticleUploader', () => {
     });
 
     describe('sync', () => {
-        it('should update the article if it has changed', () => {
-            const article = testUtils.createArticle({isChanged: true});
-            const uploader = new ArticleUploader(article, this.zendeskClient);
+        describe('article update', () => {
+            it('should update the article if it has changed', () => {
+                const article = testUtils.createArticle({isChanged: true});
+                const uploader = new ArticleUploader(article, this.zendeskClient);
 
-            return uploader.sync()
-                .then(() => {
-                    expect(this.zendeskClient.articles.update)
-                        .to.have.been.called;
-                });
-        });
-
-        it('should update article hash after updating article if article was changed', () => {
-            const article = testUtils.createArticle({isChanged: true});
-            const uploader = new ArticleUploader(article, this.zendeskClient);
-
-            return uploader.sync()
-                .then(() => {
-                    expect(article.updateHash).to.be.calledOnce;
-                });
-        });
-
-        it('should reject if failed to update article hash', () => {
-            const article = testUtils.createArticle({isChanged: true});
-            const uploader = new ArticleUploader(article, this.zendeskClient);
-
-            article.updateHash.rejects('Error');
-
-            return expect(uploader.sync())
-                .to.be.rejectedWith('Error');
-        });
-
-        it('should not update the article if it has not changed', () => {
-            const article = testUtils.createArticle({isChanged: false});
-            const uploader = new ArticleUploader(article, this.zendeskClient);
-
-            return uploader.sync()
-                .then(() => {
-                    expect(this.zendeskClient.articles.update)
-                        .to.not.have.been.called;
-                });
-        });
-
-        it('should not update article hash if article has not been changed', () => {
-            const article = testUtils.createCategory({isChanged: false});
-            const uploader = new ArticleUploader(article, this.zendeskClient);
-
-            return uploader.sync()
-                .then(() => {
-                    expect(article.updateHash).to.be.not.called;
-                });
-        });
-
-        it('should reject the promise when the update article API returns an error', () => {
-            const section = testUtils.createArticle();
-            const error = {error: 'error message'};
-            const uploader = new ArticleUploader(section, this.zendeskClient);
-
-            this.zendeskClient.articles.update.rejects(error);
-
-            return expect(uploader.sync())
-                .to.be.rejectedWith(error);
-        });
-
-        it('should set `locale` metadata to the request', () => {
-            const article = testUtils.createArticle({
-                meta: {
-                    zendeskId: 1234,
-                    locale: 'test-locale'
-                }
+                return uploader.sync()
+                    .then(() => {
+                        expect(this.zendeskClient.articles.update)
+                            .to.have.been.called;
+                    });
             });
-            const uploader = new ArticleUploader(article, this.zendeskClient);
 
-            return uploader.sync()
-                .then(() => {
-                    expect(this.zendeskClient.articles.update)
-                        .to.have.been.calledWith(sinon.match.any, {
-                            article: sinon.match({
-                                locale: 'test-locale'
-                            })
-                        });
+            it('should update the article for the correct zendeskId', () => {
+                const article = testUtils.createArticle({
+                    isChanged: true,
+                    meta: {zendeskId: 12345}
                 });
+                const uploader = new ArticleUploader(article, this.zendeskClient);
+
+                return uploader.sync()
+                    .then(() => {
+                        expect(this.zendeskClient.articles.update)
+                            .to.have.been.calledWithMatch(12345);
+                    });
+            });
+
+            it('should not update the article if it has not changed', () => {
+                const article = testUtils.createArticle({isChanged: false});
+                const uploader = new ArticleUploader(article, this.zendeskClient);
+
+                return uploader.sync()
+                    .then(() => {
+                        expect(this.zendeskClient.articles.update)
+                            .to.not.have.been.called;
+                    });
+            });
+
+            it('should reject the promise when the article update API returns an error', () => {
+                const section = testUtils.createArticle({isChanged: true});
+                const error = {error: 'error message'};
+                const uploader = new ArticleUploader(section, this.zendeskClient);
+
+                this.zendeskClient.articles.update.rejects(error);
+
+                return expect(uploader.sync())
+                    .to.be.rejectedWith(error);
+            });
+
+            it('should set the article `position` to the request if one is provided', () => {
+                const article = testUtils.createArticle({
+                    isChanged: true,
+                    meta: {position: 42}
+                });
+                const uploader = new ArticleUploader(article, this.zendeskClient);
+
+                return uploader.sync()
+                    .then(() => {
+                        expect(this.zendeskClient.articles.update)
+                            .to.have.been.calledWith(sinon.match.any, {
+                                article: sinon.match({
+                                    position: 42
+                                })
+                            });
+                    });
+            });
+
+            it('should set `label_names` to the request property if labels are provided', () => {
+                const article = testUtils.createArticle({
+                    isChanged: true,
+                    meta: {labels: ['test1', 'test2']}
+                });
+                const uploader = new ArticleUploader(article, this.zendeskClient);
+
+                return uploader.sync()
+                    .then(() => {
+                        expect(this.zendeskClient.articles.update)
+                            .to.have.been.calledWith(sinon.match.any, {
+                                article: sinon.match({
+                                    'label_names': ['test1', 'test2']
+                                })
+                            });
+                    });
+            });
+
+            it('should set the section id to the request', () => {
+                const section = testUtils.createSection({
+                    meta: {zendeskId: 123456}
+                });
+                const article = testUtils.createArticle({
+                    isChanged: true,
+                    section: section
+                });
+                const uploader = new ArticleUploader(article, this.zendeskClient);
+
+                return uploader.sync()
+                    .then(() => {
+                        expect(this.zendeskClient.articles.update)
+                            .to.have.been.calledWith(sinon.match.any, {
+                                article: sinon.match({
+                                    'section_id': 123456
+                                })
+                            });
+                    });
+            });
         });
 
-        it('should set the `locale` environment variable to the request if one was not provided', () => {
-            process.env.ZENDESK_API_LOCALE = 'env-locale';
-            const article = testUtils.createArticle({
-                meta: {
-                    zendeskId: 12345
-                }
-            });
-            const uploader = new ArticleUploader(article, this.zendeskClient);
+        describe('translations update', () => {
+            it('should update the article translation if the article has changed', () => {
+                const article = testUtils.createArticle({isChanged: true});
+                const uploader = new ArticleUploader(article, this.zendeskClient);
 
-            return uploader.sync()
-                .then(() => {
-                    expect(this.zendeskClient.articles.update)
-                        .to.have.been.calledWith(sinon.match.any, {
-                            article: sinon.match({
-                                locale: 'env-locale'
-                            })
-                        });
-                    delete process.env.ZENDESK_API_LOCALE;
+                return uploader.sync()
+                    .then(() => {
+                        expect(this.zendeskClient.translations.updateForArticle)
+                            .to.have.been.called;
+                    });
+            });
+
+            it('should update the article translation for the correct zendeskId', () => {
+                const article = testUtils.createArticle({
+                    isChanged: true,
+                    meta: {zendeskId: 12345}
                 });
+                const uploader = new ArticleUploader(article, this.zendeskClient);
+
+                return uploader.sync()
+                    .then(() => {
+                        expect(this.zendeskClient.translations.updateForArticle)
+                            .to.have.been.calledWithMatch(12345);
+                    });
+            });
+
+            it('should not update the article translation if article has not changed', () => {
+                const article = testUtils.createArticle({isChanged: false});
+                const uploader = new ArticleUploader(article, this.zendeskClient);
+
+                return uploader.sync()
+                    .then(() => {
+                        expect(this.zendeskClient.translations.updateForArticle)
+                            .to.not.have.been.called;
+                    });
+            });
+
+
+            it('should reject the promise when the translations API returns an error', () => {
+                const section = testUtils.createArticle({isChanged: true});
+                const error = {error: 'error message'};
+                const uploader = new ArticleUploader(section, this.zendeskClient);
+
+                this.zendeskClient.translations.updateForArticle.rejects(error);
+
+                return expect(uploader.sync())
+                    .to.be.rejectedWith(error);
+            });
+
+            it('should update the translation for the correct locale', () => {
+                const article = testUtils.createArticle({
+                    isChanged: true,
+                    meta: {locale: 'test-locale'}
+                });
+                const uploader = new ArticleUploader(article, this.zendeskClient);
+
+                return uploader.sync()
+                    .then(() => {
+                        expect(this.zendeskClient.translations.updateForArticle)
+                            .to.have.been.calledWithMatch(sinon.match.any, 'test-locale');
+                    });
+            });
+
+            it('should set the locale to the request', () => {
+                const article = testUtils.createArticle({
+                    isChanged: true,
+                    meta: {locale: 'test-locale'}
+                });
+                const uploader = new ArticleUploader(article, this.zendeskClient);
+
+                return uploader.sync()
+                    .then(() => {
+                        expect(this.zendeskClient.translations.updateForArticle)
+                            .to.have.been.calledWith(sinon.match.any, sinon.match.any, {
+                                translation: sinon.match({
+                                    'locale': 'test-locale'
+                                })
+                            });
+                    });
+            });
+
+            it('should set the html to the request', () => {
+                const article = testUtils.createArticle({
+                    isChanged: true,
+                    convertMarkdown: sinon.stub().resolves('<p>Lorem ipsum dolor sit amet</p>')
+                });
+                const uploader = new ArticleUploader(article, this.zendeskClient);
+
+                return uploader.sync()
+                    .then(() => {
+                        expect(this.zendeskClient.translations.updateForArticle)
+                            .to.have.been.calledWith(sinon.match.any, sinon.match.any, {
+                                translation: sinon.match({
+                                    'body': '<p>Lorem ipsum dolor sit amet</p>'
+                                })
+                            });
+                    });
+            });
+
+            it('should set the title to the request', () => {
+                const article = testUtils.createArticle({
+                    isChanged: true,
+                    meta: {title: 'Test Title'}
+                });
+                const uploader = new ArticleUploader(article, this.zendeskClient);
+
+                return uploader.sync()
+                    .then(() => {
+                        expect(this.zendeskClient.translations.updateForArticle)
+                            .to.have.been.calledWith(sinon.match.any, sinon.match.any, {
+                                translation: sinon.match({
+                                    title: 'Test Title'
+                                })
+                            });
+                    });
+            });
         });
 
-        it('should set US English to the request `locale` if one is not provided and the environment variable is not set', () => {
-            const article = testUtils.createArticle({
-                meta: {
-                    zendeskId: 12345
-                }
+        describe('hash', () => {
+            it('should update article hash after updating article if article was changed', () => {
+                const article = testUtils.createArticle({isChanged: true});
+                const uploader = new ArticleUploader(article, this.zendeskClient);
+
+                return uploader.sync()
+                    .then(() => {
+                        expect(article.updateHash).to.be.calledOnce;
+                    });
             });
-            const uploader = new ArticleUploader(article, this.zendeskClient);
 
-            return uploader.sync()
-                .then(() => {
-                    expect(this.zendeskClient.articles.update)
-                        .to.have.been.calledWith(sinon.match.any, {
-                            article: sinon.match({
-                                locale: 'en-us'
-                            })
-                        });
-                });
-        });
+            it('should reject if failed to update article hash', () => {
+                const article = testUtils.createArticle({isChanged: true});
+                const uploader = new ArticleUploader(article, this.zendeskClient);
 
-        it('should set the article `position` to the request if one is provided', () => {
-            const article = testUtils.createArticle({
-                meta: {
-                    zendeskId: 12345,
-                    position: 42
-                }
+                article.updateHash.rejects('Error');
+
+                return expect(uploader.sync())
+                    .to.be.rejectedWith('Error');
             });
-            const uploader = new ArticleUploader(article, this.zendeskClient);
 
-            return uploader.sync()
-                .then(() => {
-                    expect(this.zendeskClient.articles.update)
-                        .to.have.been.calledWith(sinon.match.any, {
-                            article: sinon.match({
-                                position: 42
-                            })
-                        });
-                });
-        });
 
-        it('should set `label_names` to the request property if labels are provided', () => {
-            const article = testUtils.createArticle({
-                meta: {
-                    zendeskId: 1234,
-                    labels: ['test1', 'test2']
-                }
+            it('should not update article hash if article has not been changed', () => {
+                const article = testUtils.createCategory({isChanged: false});
+                const uploader = new ArticleUploader(article, this.zendeskClient);
+
+                return uploader.sync()
+                    .then(() => {
+                        expect(article.updateHash).to.be.not.called;
+                    });
             });
-            const uploader = new ArticleUploader(article, this.zendeskClient);
-
-            return uploader.sync()
-                .then(() => {
-                    expect(this.zendeskClient.articles.update)
-                        .to.have.been.calledWith(sinon.match.any, {
-                            article: sinon.match({
-                                'label_names': ['test1', 'test2']
-                            })
-                        });
-                });
-        });
-
-        it('should set the html to the request', () => {
-            const article = testUtils.createArticle({
-                meta: {
-                    zendeskId: 1234
-                },
-                convertMarkdown: sinon.stub().resolves('<p>Lorem ipsum dolor sit amet</p>')
-            });
-            const uploader = new ArticleUploader(article, this.zendeskClient);
-
-            return uploader.sync()
-                .then(() => {
-                    expect(this.zendeskClient.articles.update)
-                        .to.have.been.calledWith(sinon.match.any, {
-                            article: sinon.match({
-                                'body': '<p>Lorem ipsum dolor sit amet</p>'
-                            })
-                        });
-                });
-        });
-
-        it('should set the section id to the request', () => {
-            const section = testUtils.createSection({
-                meta: {
-                    zendeskId: 123456
-                }
-            });
-            const article = testUtils.createArticle({
-                meta: {
-                    zendeskId: 1234
-                },
-                section: section
-            });
-            const uploader = new ArticleUploader(article, this.zendeskClient);
-
-            return uploader.sync()
-                .then(() => {
-                    expect(this.zendeskClient.articles.update)
-                        .to.have.been.calledWith(sinon.match.any, {
-                            article: sinon.match({
-                                'section_id': 123456
-                            })
-                        });
-                });
         });
     });
 });

@@ -10,7 +10,8 @@ function createArticle(opts) {
             write: sinon.stub().resolves()
         },
         convertMarkdown: sinon.stub().resolves('<p>Lorem ipsum dolor sit amet</p>'),
-        isChanged: true,
+        isChanged: false,
+        isNew: false,
         updateHash: sinon.stub().resolves()
     });
     article.section = opts.section || createSection({
@@ -34,7 +35,8 @@ function createSection(opts) {
             update: sinon.stub().returns(),
             write: sinon.stub().resolves()
         },
-        isChanged: true,
+        isChanged: false,
+        isNew: false,
         updateHash: sinon.stub().resolves()
     });
     section.articles = [].concat(opts.articles || [
@@ -61,6 +63,7 @@ function createCategory(opts) {
             write: sinon.stub().resolves()
         },
         isChanged: true,
+        isNew: false,
         updateHash: sinon.stub().resolves()
     });
     category.sections = [].concat(opts.sections || [
@@ -80,7 +83,7 @@ function createResource(opts) {
             update: sinon.stub().returns(),
             write: sinon.stub().resolves()
         },
-        isChanged: true,
+        isChanged: false,
         isNew: false
     });
 

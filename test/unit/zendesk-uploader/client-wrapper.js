@@ -72,6 +72,16 @@ describe('ZendeskClientWrapper', () => {
                     expect(stub).to.have.been.called;
                 });
         });
+
+        it('should wrap the methods of the client.translations object', () => {
+            const stub = sandbox.stub(this.zendeskStub.translations, 'show')
+                .yields(null, null, {});
+
+            return this.zendeskClient.translations.show()
+                .then(() => {
+                    expect(stub).to.have.been.called;
+                });
+        });
     });
 
     describe('{property}.{method}', () => {
