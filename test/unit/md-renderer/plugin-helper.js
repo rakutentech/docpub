@@ -159,5 +159,12 @@ describe('PluginHelper', () => {
             expect(pluginHelper.isRelativePath(path))
                 .to.be.false;
         });
+
+        it('should return false if the path begins with "mailto:"', () => {
+            const path = 'mailto:test@test.com';
+
+            expect(pluginHelper.isRelativePath(path))
+                .to.be.false;
+        });
     });
 });

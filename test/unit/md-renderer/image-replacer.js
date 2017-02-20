@@ -43,6 +43,16 @@ describe('ImageReplacer', () => {
             .to.contain('src="/testDir/test/stuff.png"');
     });
 
+    it('should not replace the image src if findByPath returns `undefined`', () => {
+        const document = new Document('path');
+        const renderer = createRenderer_(123456, document);
+        document.findByPath.returns(undefined);
+        const markdown = '![alt text](../non-existent-path "Logo Text")';
+
+        expect(renderer.render(markdown))
+            .to.contain('src="../non-existent-path"');
+    });
+
     it('should throw an error if no parameter is provided', () => {
         expect(() => new MarkdownIt().use(imageReplacer))
             .to.throw(/Document/);

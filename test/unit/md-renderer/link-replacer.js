@@ -43,6 +43,24 @@ describe('LinkReplacer', () => {
             .to.contain('href="#Anchor"');
     });
 
+    it('should not replace links that start with "mailto:"', () => {
+        const renderer = createRenderer_(123456);
+        const markdown = '[Link Text](mailto:test@test.com)';
+
+        expect(renderer.render(markdown))
+            .to.contain('href="mailto:test@test.com"');
+    });
+
+    it('should not replace the link if findByPath returns `undefined`', () => {
+        const document = new Document('path');
+        const renderer = createRenderer_(123456, document);
+        document.findByPath.returns(undefined);
+        const markdown = '[Link Text](../non-existent-path)';
+
+        expect(renderer.render(markdown))
+            .to.contain('href="../non-existent-path"');
+    });
+
     it('should throw an error if no parameter is provided', () => {
         expect(() => new MarkdownIt().use(linkReplacer))
             .to.throw(/Document/);
