@@ -210,6 +210,25 @@ describe('ZendeskClientWrapper', () => {
                 });
         });
 
+        it('should attach the file as inline', () => {
+            mockFs({
+                'test.jpg': 'content'
+            });
+            sandbox.stub(request, 'post').yields(
+                null,
+                {},
+                JSON.stringify({test: 'test'})
+            );
+
+            return this.zendeskClient.articleattachments.create(123, 'test.jpg')
+                .then(() => {
+                    expect(request.post)
+                        .to.have.been.calledWithMatch({formData: sinon.match({
+                            inline: 'true'
+                        })});
+                });
+        });
+
         it('should reject the promise with an error when the request returns an error', () => {
             mockFs({
                 'test.jpg': 'content'
