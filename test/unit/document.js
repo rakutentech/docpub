@@ -71,7 +71,7 @@ describe('Document', () => {
             const document = new Document('path');
 
             Object.defineProperty(document, 'hash', {value: 'abcdef'});
-            document.meta = {userMetaHash: `a0b1c2`};
+            document.meta = {hash: `a0b1c2`};
 
             expect(document.isChanged).to.be.true;
         });
@@ -80,7 +80,7 @@ describe('Document', () => {
             const document = new Document('path');
 
             Object.defineProperty(document, 'hash', {value: 'abcdef'});
-            document.meta = {userMetaHash: `abcdef`};
+            document.meta = {hash: `abcdef`};
 
             expect(document.isChanged).to.be.false;
         });

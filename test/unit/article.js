@@ -78,7 +78,7 @@ describe('Article', () => {
             const article = createArticle_();
 
             Object.defineProperty(article, 'hash', {value: 'abcdef'});
-            article.meta = {userMetaHash: `0a1b2c`};
+            article.meta = {hash: `0a1b2c`};
 
             expect(article.isChanged).to.be.true;
         });
@@ -87,7 +87,7 @@ describe('Article', () => {
             const article = createArticle_();
 
             Object.defineProperty(article, 'hash', {value: 'abcdef'});
-            article.meta = {userMetaHash: `abcdef`};
+            article.meta = {hash: `abcdef`};
 
             article.setChildren([]);
 
@@ -98,7 +98,7 @@ describe('Article', () => {
             const article = createArticle_();
             const resource = new Resource('path', article);
 
-            article.meta = {userMetaHash: `abcdef`};
+            article.meta = {hash: `abcdef`};
             Object.defineProperty(article, 'hash', {value: 'abcdef'});
 
             Object.defineProperty(resource, 'isChanged', {value: true});
@@ -112,7 +112,7 @@ describe('Article', () => {
             const article = createArticle_();
             const resource = new Resource('path', article);
 
-            article.meta = {userMetaHash: `abcdef`};
+            article.meta = {hash: `abcdef`};
             Object.defineProperty(article, 'hash', {value: 'abcdef'});
 
             Object.defineProperty(resource, 'isChanged', {value: false});

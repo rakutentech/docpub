@@ -1,4 +1,5 @@
 const mockFs = require('mock-fs');
+const fs = require('fs-promise');
 const fsu = require('../../lib/fs-utils');
 
 describe('fs-utils', () => {
@@ -100,6 +101,12 @@ describe('fs-utils', () => {
     });
 
     describe('listSubdirectories', () => {
+        const sandbox = sinon.sandbox.create();
+
+        afterEach(() => {
+            sandbox.restore();
+        });
+
         it('should reject if source dir name is not specified', () => {
             return expect(fsu.listSubdirectories())
                 .to.be.rejectedWith(/Source path/);
@@ -151,6 +158,32 @@ describe('fs-utils', () => {
             return fsu.listSubdirectories('dir').then(subdirs => {
                 expect(subdirs).to.include('dir/subdir')
                     .and.to.not.include('dir/file.foo');
+            });
+        });
+
+        it('shall not list directories which name starts with `.`', () => {
+            mockFs({
+                dir: {
+                    '.subdir': {}
+                }
+            });
+
+            return fsu.listSubdirectories('dir').then(subdirs => {
+                expect(subdirs).to.be.empty;
+            });
+        });
+
+        it('shall not list entries for which failed to get stats', () => {
+            mockFs({
+                dir: {
+                    'subdir': {}
+                }
+            });
+
+            sandbox.stub(fs, 'stat').rejects();
+
+            return fsu.listSubdirectories('dir').then(subdirs => {
+                expect(subdirs).to.be.empty;
             });
         });
     });

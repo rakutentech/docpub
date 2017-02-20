@@ -147,6 +147,14 @@ describe('ZendeskClientWrapper', () => {
     });
 
     describe('articleattachments.create', () => {
+        beforeEach(() => {
+            sandbox.stub(request, 'post').yields(
+                null,
+                {statusCode: 200},
+                JSON.stringify({'article_attachment': {}})
+            );
+        });
+
         afterEach(() => {
             mockFs.restore();
         });
@@ -155,9 +163,9 @@ describe('ZendeskClientWrapper', () => {
             mockFs({
                 'test.jpg': 'content'
             });
-            sandbox.stub(request, 'post').yields(
+            request.post.yields(
                 null,
-                {},
+                {statusCode: 200},
                 JSON.stringify({'article_attachment': {test: 'test'}})
             );
 
@@ -166,23 +174,11 @@ describe('ZendeskClientWrapper', () => {
         });
 
         it('should set the request url to the article attachments endpoint for the correct article ID', () => {
-            const client = new ZendeskClientWrapper(zendesk.createClient({
-                username: 'username',
-                token: 'token',
-                remoteUri: 'uri',
-                helpcenter: true,
-                disableGlobalState: true
-            }));
             mockFs({
                 'test.jpg': 'content'
             });
-            sandbox.stub(request, 'post').yields(
-                null,
-                {},
-                JSON.stringify({test: 'test'})
-            );
 
-            return client.articleattachments.create(123, 'test.jpg')
+            return this.zendeskClient.articleattachments.create(123, 'test.jpg')
                 .then(() => {
                     expect(request.post)
                         .to.have.been.calledWith(sinon.match({
@@ -195,11 +191,6 @@ describe('ZendeskClientWrapper', () => {
             mockFs({
                 'test.jpg': 'content'
             });
-            sandbox.stub(request, 'post').yields(
-                null,
-                {},
-                JSON.stringify({test: 'test'})
-            );
 
             return this.zendeskClient.articleattachments.create(123, 'test.jpg')
                 .then(() => {
@@ -214,11 +205,6 @@ describe('ZendeskClientWrapper', () => {
             mockFs({
                 'test.jpg': 'content'
             });
-            sandbox.stub(request, 'post').yields(
-                null,
-                {},
-                JSON.stringify({test: 'test'})
-            );
 
             return this.zendeskClient.articleattachments.create(123, 'test.jpg')
                 .then(() => {
@@ -233,10 +219,7 @@ describe('ZendeskClientWrapper', () => {
             mockFs({
                 'test.jpg': 'content'
             });
-            sandbox.stub(request, 'post').yields(
-                {error: 'error'},
-                {}
-            );
+            request.post.yields({error: 'error'});
 
             return expect(this.zendeskClient.articleattachments.create(123, 'test.jpg'))
                 .to.be.rejectedWith({error: 'error'});
@@ -246,10 +229,7 @@ describe('ZendeskClientWrapper', () => {
             mockFs({
                 'test.jpg': 'content'
             });
-            sandbox.stub(request, 'post').yields(
-                null,
-                {statusCode: 400}
-            );
+            request.post.yields(null, {statusCode: 400});
 
             return expect(this.zendeskClient.articleattachments.create(123, 'test.jpg'))
                 .to.be.rejected;
@@ -259,19 +239,19 @@ describe('ZendeskClientWrapper', () => {
             mockFs({
                 'test.jpg': 'content'
             });
-            const requestStub = sandbox.stub(request, 'post').yields(
+            request.post.yields(
                 null,
-                {response: 200},
+                {statusCode: 200},
                 JSON.stringify({test: 'test'})
             );
-            requestStub.onFirstCall().yields(
+            request.post.onFirstCall().yields(
                 null,
                 {headers: {'retry-after': .05}}
             );
 
             return this.zendeskClient.articleattachments.create(123, 'test.jpg')
                 .then(() => {
-                    expect(requestStub)
+                    expect(request.post)
                         .to.have.been.calledTwice;
                 });
         });
@@ -282,14 +262,10 @@ describe('ZendeskClientWrapper', () => {
                     username: 'username',
                     password: 'password'
                 });
+
                 mockFs({
                     'test.jpg': 'content'
                 });
-                sandbox.stub(request, 'post').yields(
-                    null,
-                    {},
-                    JSON.stringify({test: 'test'})
-                );
 
                 return client.articleattachments.create(123, 'test.jpg')
                     .then(() => {
@@ -304,14 +280,10 @@ describe('ZendeskClientWrapper', () => {
                 const client = createZendeskClient_({
                     password: 'password'
                 });
+
                 mockFs({
                     'test.jpg': 'content'
                 });
-                sandbox.stub(request, 'post').yields(
-                    null,
-                    {},
-                    JSON.stringify({test: 'test'})
-                );
 
                 return client.articleattachments.create(123, 'test.jpg')
                     .then(() => {
@@ -329,11 +301,6 @@ describe('ZendeskClientWrapper', () => {
                 mockFs({
                     'test.jpg': 'content'
                 });
-                sandbox.stub(request, 'post').yields(
-                    null,
-                    {},
-                    JSON.stringify({test: 'test'})
-                );
 
                 return client.articleattachments.create(123, 'test.jpg')
                     .then(() => {
@@ -351,11 +318,6 @@ describe('ZendeskClientWrapper', () => {
                 mockFs({
                     'test.jpg': 'content'
                 });
-                sandbox.stub(request, 'post').yields(
-                    null,
-                    {},
-                    JSON.stringify({test: 'test'})
-                );
 
                 return client.articleattachments.create(123, 'test.jpg')
                     .then(() => {
@@ -374,11 +336,6 @@ describe('ZendeskClientWrapper', () => {
                 mockFs({
                     'test.jpg': 'content'
                 });
-                sandbox.stub(request, 'post').yields(
-                    null,
-                    {},
-                    JSON.stringify({test: 'test'})
-                );
 
                 return client.articleattachments.create(123, 'test.jpg')
                     .then(() => {
