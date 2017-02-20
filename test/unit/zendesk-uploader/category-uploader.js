@@ -1,5 +1,6 @@
 const CategoryUploader = require('../../../lib/zendesk-uploader/category-uploader');
 const SectionUploader = require('../../../lib/zendesk-uploader/section-uploader');
+const logger = require('../../../lib/logger');
 const testUtils = require('./test-utils');
 
 describe('CategoryUploader', () => {
@@ -15,6 +16,8 @@ describe('CategoryUploader', () => {
         };
         this.createSectionStub = sandbox.stub(SectionUploader.prototype, 'create').resolves();
         this.syncSectionStub = sandbox.stub(SectionUploader.prototype, 'sync').resolves();
+
+        sandbox.stub(logger, 'info');
     });
     afterEach(() => {
         sandbox.restore();
@@ -60,6 +63,17 @@ describe('CategoryUploader', () => {
                 });
         });
 
+        it('should log create category action if category does not exist', () => {
+            const category = testUtils.createCategory({isNew: true, path: 'category/path'});
+            const uploader = new CategoryUploader(category, this.zendeskClient);
+
+            return uploader.create()
+                .then(() => {
+                    expect(logger.info)
+                        .to.have.been.calledWith(`Creating new category on ZenDesk: category/path`);
+                });
+        });
+
         it('should not create the category if it already exists', () => {
             const category = testUtils.createCategory({
                 isNew: false
@@ -70,6 +84,17 @@ describe('CategoryUploader', () => {
                 .then(() => {
                     expect(this.zendeskClient.categories.create)
                         .to.not.have.been.called;
+                });
+        });
+
+        it('should not log create category action if category is not new', () => {
+            const category = testUtils.createCategory({isNew: false});
+            const uploader = new CategoryUploader(category, this.zendeskClient);
+
+            return uploader.create()
+                .then(() => {
+                    expect(logger.info)
+                        .to.have.been.not.called;
                 });
         });
 
@@ -177,6 +202,17 @@ describe('CategoryUploader', () => {
                     });
             });
 
+            it('should log update category action if category changed', () => {
+                const category = testUtils.createCategory({isChanged: true, path: 'category/path'});
+                const uploader = new CategoryUploader(category, this.zendeskClient);
+
+                return uploader.sync()
+                    .then(() => {
+                        expect(logger.info)
+                            .to.have.been.calledWith(`Synchronizing category on ZenDesk: category/path`);
+                    });
+            });
+
             it('should not update a category if it has not been changed', () => {
                 const category = testUtils.createCategory({isChanged: false});
                 const uploader = new CategoryUploader(category, this.zendeskClient);
@@ -185,6 +221,17 @@ describe('CategoryUploader', () => {
                     .then(() => {
                         expect(this.zendeskClient.categories.update)
                             .to.not.have.been.called;
+                    });
+            });
+
+            it('should not log update category action if was not changed', () => {
+                const category = testUtils.createCategory({isChanged: false});
+                const uploader = new CategoryUploader(category, this.zendeskClient);
+
+                return uploader.sync()
+                    .then(() => {
+                        expect(logger.info)
+                            .to.be.not.called;
                     });
             });
 

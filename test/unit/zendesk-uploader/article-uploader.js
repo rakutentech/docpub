@@ -1,4 +1,5 @@
 const ArticleUploader = require('../../../lib/zendesk-uploader/article-uploader');
+const logger = require('../../../lib/logger');
 const testUtils = require('./test-utils');
 
 describe('ArticleUploader', () => {
@@ -15,6 +16,8 @@ describe('ArticleUploader', () => {
         this.zendeskClient.articleattachments = {
             create: sandbox.stub().resolves({id: 54321})
         };
+
+        sandbox.stub(logger, 'info');
     });
     afterEach(() => {
         sandbox.restore();
@@ -32,6 +35,17 @@ describe('ArticleUploader', () => {
                 });
         });
 
+        it('should log create article action if article is new', () => {
+            const article = testUtils.createArticle({isNew: true, path: 'article/path'});
+            const uploader = new ArticleUploader(article, this.zendeskClient);
+
+            return uploader.create()
+                .then(() => {
+                    expect(logger.info)
+                        .to.have.been.calledWith('Creating article on ZenDesk: article/path');
+                });
+        });
+
         it('should not create an article if it already exists on Zendesk', () => {
             const article = testUtils.createArticle({isNew: false});
             const uploader = new ArticleUploader(article, this.zendeskClient);
@@ -40,6 +54,17 @@ describe('ArticleUploader', () => {
                 .then(() => {
                     expect(this.zendeskClient.articles.create)
                         .to.not.have.been.called;
+                });
+        });
+
+        it('should not log create article action if article is not new', () => {
+            const article = testUtils.createArticle({isNew: false});
+            const uploader = new ArticleUploader(article, this.zendeskClient);
+
+            return uploader.create()
+                .then(() => {
+                    expect(logger.info)
+                        .to.have.been.not.called;
                 });
         });
 
@@ -199,6 +224,30 @@ describe('ArticleUploader', () => {
                     });
             });
 
+            it('should log create action for each created resource', () => {
+                const article = testUtils.createArticle();
+                article.resources = [
+                    testUtils.createResource({
+                        path: 'test.jpg',
+                        isChanged: true,
+                        isNew: false
+                    }),
+                    testUtils.createResource({
+                        path: 'test2.jpg',
+                        isChanged: false,
+                        isNew: true
+                    })
+                ];
+                const uploader = new ArticleUploader(article, this.zendeskClient);
+
+                return uploader.create()
+                    .then(() => {
+                        expect(logger.info)
+                            .to.have.been.calledWith('Creating resource on ZenDesk: test.jpg')
+                            .and.to.have.been.calledWith('Creating resource on ZenDesk: test2.jpg');
+                    });
+            });
+
             it('should not upload any resources if none are changed or new', () => {
                 const article = testUtils.createArticle();
                 article.meta.resources = [
@@ -281,6 +330,17 @@ describe('ArticleUploader', () => {
                     });
             });
 
+            it('should log article update action if article changed', () => {
+                const article = testUtils.createArticle({isChanged: true, path: 'article/path'});
+                const uploader = new ArticleUploader(article, this.zendeskClient);
+
+                return uploader.sync()
+                    .then(() => {
+                        expect(logger.info)
+                            .to.have.been.calledWith('Synchronizing article on ZenDesk: article/path');
+                    });
+            });
+
             it('should update the article for the correct zendeskId', () => {
                 const article = testUtils.createArticle({
                     isChanged: true,
@@ -303,6 +363,17 @@ describe('ArticleUploader', () => {
                     .then(() => {
                         expect(this.zendeskClient.articles.update)
                             .to.not.have.been.called;
+                    });
+            });
+
+            it('should not log article update action if article was not changed', () => {
+                const article = testUtils.createArticle({isChanged: false});
+                const uploader = new ArticleUploader(article, this.zendeskClient);
+
+                return uploader.sync()
+                    .then(() => {
+                        expect(logger.info)
+                            .to.have.been.not.called;
                     });
             });
 

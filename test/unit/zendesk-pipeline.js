@@ -1,5 +1,6 @@
 const proxyquire = require('proxyquire');
 const path = require('path');
+const logger = require('../../lib/logger');
 let ZendeskPipeline;
 let Category;
 let CategoryUploader;
@@ -11,12 +12,15 @@ describe('ZendeskPipeline', () => {
         Category = sandbox.stub();
         CategoryUploader = sandbox.stub();
         ZendeskPipeline = proxyquire('../../lib/zendesk-pipeline', {
+            './logger': logger,
             './category': Category,
             './zendesk-uploader/category-uploader': CategoryUploader
         });
 
         sandbox.stub(Category.prototype, 'read').resolves();
         sandbox.stub(CategoryUploader.prototype, 'upload').resolves();
+
+        sandbox.stub(logger);
     });
 
     afterEach(() => {
@@ -57,6 +61,14 @@ describe('ZendeskPipeline', () => {
                         .to.be.calledWith(path.resolve(process.cwd(), '../foo/bar'));
                 });
         });
+
+        it('should setup logger', () => {
+            /*eslint-disable no-new*/
+            new ZendeskPipeline({verbose: true});
+            /*eslint-enable no-new*/
+
+            expect(logger.setup).to.be.calledWithMatch({verbose: true});
+        });
     });
 
     describe('uploadCategory', () => {
@@ -70,6 +82,16 @@ describe('ZendeskPipeline', () => {
             delete process.env.ZENDESK_API_USERNAME;
             delete process.env.ZENDESK_API_TOKEN;
             delete process.env.ZENDESK_URL;
+        });
+
+        it('should log upload process start', () => {
+            const pipeline = new ZendeskPipeline({path: 'category/path'});
+
+            return pipeline.uploadCategory()
+                .then(() => {
+                    expect(logger.info)
+                        .to.be.calledWith('Start uploading.');
+                });
         });
 
         it('should read project directory', () => {
@@ -111,6 +133,16 @@ describe('ZendeskPipeline', () => {
                 });
         });
 
+        it('should log uploading success if all was uploaded correctly', () => {
+            const pipeline = new ZendeskPipeline();
+
+            return pipeline.uploadCategory()
+                .then(() => {
+                    expect(logger.info)
+                        .to.be.calledWithMatch(`Successfully uploaded all entities for category`);
+                });
+        });
+
         it('should reject if category uploading failed with error', () => {
             CategoryUploader.prototype.upload.rejects(new Error('error'));
 
@@ -118,6 +150,17 @@ describe('ZendeskPipeline', () => {
 
             return expect(pipeline.uploadCategory())
                 .to.be.rejectedWith(/error/);
+        });
+
+        it('should log error if category uploading finished with error', () => {
+            CategoryUploader.prototype.upload.rejects(new Error('error'));
+
+            const pipeline = new ZendeskPipeline();
+
+            return expect(pipeline.uploadCategory()).to.be.rejectedWith()
+                .then(() => {
+                    expect(logger.error).to.be.calledWith(`Upload failed!`);
+                });
         });
     });
 });

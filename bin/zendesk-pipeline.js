@@ -23,4 +23,7 @@ const zendeskPipeline = new ZendeskPipeline(program);
 
 zendeskPipeline
     .uploadCategory()
+    .catch(() => {
+        process.exit(1);
+    })
     .done();

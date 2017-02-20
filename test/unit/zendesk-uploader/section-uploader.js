@@ -1,5 +1,6 @@
 const SectionUploader = require('../../../lib/zendesk-uploader/section-uploader');
 const ArticleUploader = require('../../../lib/zendesk-uploader/article-uploader');
+const logger = require('../../../lib/logger');
 const testUtils = require('./test-utils');
 
 describe('SectionUploader', () => {
@@ -18,6 +19,8 @@ describe('SectionUploader', () => {
         };
         this.createArticleStub = sandbox.stub(ArticleUploader.prototype, 'create').resolves();
         this.syncArticleStub = sandbox.stub(ArticleUploader.prototype, 'sync').resolves();
+
+        sandbox.stub(logger, 'info');
     });
     afterEach(() => {
         sandbox.restore();
@@ -35,6 +38,17 @@ describe('SectionUploader', () => {
                 });
         });
 
+        it('should log create section action if section does not exist', () => {
+            const category = testUtils.createSection({isNew: true, path: 'category/path'});
+            const uploader = new SectionUploader(category, this.zendeskClient);
+
+            return uploader.create()
+                .then(() => {
+                    expect(logger.info)
+                        .to.have.been.calledWith(`Creating new section on ZenDesk: category/path`);
+                });
+        });
+
         it('should not create the section if it already exists', () => {
             const section = testUtils.createSection({isNew: false});
             const uploader = new SectionUploader(section, this.zendeskClient);
@@ -43,6 +57,17 @@ describe('SectionUploader', () => {
                 .then(() => {
                     expect(this.zendeskClient.sections.create)
                         .to.not.have.been.called;
+                });
+        });
+
+        it('should not log create section action if already exists', () => {
+            const category = testUtils.createSection({isNew: false});
+            const uploader = new SectionUploader(category, this.zendeskClient);
+
+            return uploader.create()
+                .then(() => {
+                    expect(logger.info)
+                        .to.have.been.not.called;
                 });
         });
 
@@ -149,6 +174,17 @@ describe('SectionUploader', () => {
                     });
             });
 
+            it('should log update section action if section has been changed', () => {
+                const section = testUtils.createSection({isChanged: true, path: 'section/path'});
+                const uploader = new SectionUploader(section, this.zendeskClient);
+
+                return uploader.sync()
+                    .then(() => {
+                        expect(logger.info)
+                            .to.have.been.calledWith('Synchronizing section on ZenDesk: section/path');
+                    });
+            });
+
             it('should not update a section if it has not been changed', () => {
                 const section = testUtils.createSection({isChanged: false});
                 const uploader = new SectionUploader(section, this.zendeskClient);
@@ -157,6 +193,17 @@ describe('SectionUploader', () => {
                     .then(() => {
                         expect(this.zendeskClient.sections.update)
                             .to.not.have.been.called;
+                    });
+            });
+
+            it('should not log update section action if section has not been changed', () => {
+                const section = testUtils.createSection({isChanged: false});
+                const uploader = new SectionUploader(section, this.zendeskClient);
+
+                return uploader.sync()
+                    .then(() => {
+                        expect(logger.info)
+                            .to.have.been.not.called;
                     });
             });
 

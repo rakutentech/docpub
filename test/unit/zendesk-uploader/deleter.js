@@ -1,5 +1,6 @@
 const ZendeskDeleter = require('../../../lib/zendesk-uploader/deleter');
 const apiUtils = require('../../../lib/zendesk-uploader/api-utils');
+const logger = require('../../../lib/logger');
 const testUtils = require('./test-utils');
 
 describe('Deleter', () => {
@@ -14,6 +15,8 @@ describe('Deleter', () => {
             listByCategory: sandbox.stub().resolves([]),
             delete: sandbox.stub().resolves()
         };
+
+        sandbox.stub(logger, 'info');
     });
     afterEach(() => {
         sandbox.restore();
@@ -54,6 +57,17 @@ describe('Deleter', () => {
 
             return expect(deleter.delete())
                 .to.be.rejectedWith(error);
+        });
+
+        it('should log delete action', () => {
+            const category = testUtils.createCategory();
+            category.flatTree = sandbox.stub().returns([]);
+            const deleter = new ZendeskDeleter(category, this.zendeskClient);
+
+            return deleter.delete()
+                .then(() => {
+                    expect(logger.info).to.be.calledWith('Removing dangling entities from ZenDesk');
+                });
         });
 
         it('should delete all articles that exist on zendesk but not in the Category tree', () => {

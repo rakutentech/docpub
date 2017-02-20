@@ -3,6 +3,7 @@ const Section = require('../../lib/section');
 const Category = require('../../lib/category');
 const metadata = require('../../lib/metadata');
 const Metadata = require('../../lib/metadata/metadata');
+const logger = require('../../lib/logger');
 
 describe('Category', () => {
     const sandbox = sinon.sandbox.create();
@@ -57,10 +58,23 @@ describe('Category', () => {
         beforeEach(() => {
             sandbox.stub(Metadata.prototype, 'read').resolves();
             sandbox.stub(Section.prototype, 'read').resolves();
+
+            sandbox.stub(logger, 'info');
         });
 
         afterEach(() => {
             mockFs.restore();
+        });
+
+        it('should log read category action', () => {
+            mockFs({});
+
+            const category = new Category('.');
+
+            return category.read()
+                .then(() => {
+                    expect(logger.info).to.be.calledWith(`Reading category .`);
+                });
         });
 
         it('should read metadata', () => {

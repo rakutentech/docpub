@@ -8,6 +8,7 @@ const hash = require('../../lib/hash');
 const MarkdownRenderer = require('../../lib/md-renderer');
 const metadata = require('../../lib/metadata');
 const Metadata = require('../../lib/metadata/metadata');
+const logger = require('../../lib/logger');
 
 describe('Article', () => {
     const sandbox = sinon.sandbox.create();
@@ -146,6 +147,23 @@ describe('Article', () => {
     });
 
     describe('read', () => {
+        beforeEach(() => {
+            sandbox.stub(logger, 'info');
+        });
+
+        it('should log read article action', () => {
+            mockFs({
+                'content.md': `content_goes_here`
+            });
+
+            const article = createArticle_();
+
+            return article.read()
+                .then(() => {
+                    expect(logger.info).to.be.calledWith(`Reading article .`);
+                });
+        });
+
         it('should load metadata from file named `meta.json`', () => {
             mockFs({
                 'content.md': `content_goes_here`

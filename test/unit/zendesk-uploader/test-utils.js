@@ -4,6 +4,7 @@ function createArticle(opts) {
     opts = opts || {};
     const article = _.defaultsDeep(opts, {
         type: 'article',
+        path: 'article_path',
         meta: {
             title: 'Test Article',
             update: sinon.stub().returns(),
@@ -28,6 +29,7 @@ function createSection(opts) {
     opts = opts || {};
     const section = _.defaultsDeep(opts, {
         type: 'section',
+        path: 'section_path',
         meta: {
             title: 'Test Section',
             viewableBy: 'everyone',
@@ -57,6 +59,7 @@ function createCategory(opts) {
     opts = opts || {};
     const category = _.defaultsDeep(opts, {
         type: 'category',
+        path: 'category_path',
         meta: {
             title: 'Test Category',
             update: sinon.stub().returns(),
