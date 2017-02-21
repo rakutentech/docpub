@@ -4,6 +4,7 @@ const logger = require('../../lib/logger');
 let ZendeskPipeline;
 let Category;
 let CategoryUploader;
+let ZendeskDeleter;
 
 describe('ZendeskPipeline', () => {
     const sandbox = sinon.sandbox.create();
@@ -11,14 +12,17 @@ describe('ZendeskPipeline', () => {
     beforeEach(() => {
         Category = sandbox.stub();
         CategoryUploader = sandbox.stub();
+        ZendeskDeleter = sandbox.stub();
         ZendeskPipeline = proxyquire('../../lib/zendesk-pipeline', {
             './logger': logger,
             './category': Category,
-            './zendesk-uploader/category-uploader': CategoryUploader
+            './zendesk-uploader/category-uploader': CategoryUploader,
+            './zendesk-uploader/deleter': ZendeskDeleter
         });
 
         sandbox.stub(Category.prototype, 'read').resolves();
         sandbox.stub(CategoryUploader.prototype, 'upload').resolves();
+        sandbox.stub(ZendeskDeleter.prototype, 'delete').resolves();
 
         sandbox.stub(logger);
     });
@@ -161,6 +165,42 @@ describe('ZendeskPipeline', () => {
                 .then(() => {
                     expect(logger.error).to.be.calledWith(`Upload failed!`);
                 });
+        });
+
+        it('should delete documents on zendesk that dont exist locally', () => {
+            const pipeline = new ZendeskPipeline();
+
+            return pipeline.uploadCategory()
+                .then(() => {
+                    expect(ZendeskDeleter.prototype.delete)
+                        .to.be.calledOnce;
+                });
+        });
+
+        it('should call delete after upload', () => {
+            const pipeline = new ZendeskPipeline();
+
+            CategoryUploader.prototype.upload.returns(
+                new Promise(resolve => {
+                    expect(ZendeskDeleter.prototype.delete)
+                        .to.not.have.been.called;
+                    resolve();
+                })
+            );
+
+            return pipeline.uploadCategory()
+                .then(() => {
+                    expect(ZendeskDeleter.prototype.delete)
+                        .to.be.calledAfter(CategoryUploader.prototype.upload);
+                });
+        });
+
+        it('should reject if deleter returns an error', () => {
+            const pipeline = new ZendeskPipeline();
+            ZendeskDeleter.prototype.delete.rejects('error');
+
+            return expect(pipeline.uploadCategory())
+                .to.be.rejectedWith('error');
         });
     });
 });
