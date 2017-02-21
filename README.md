@@ -4,7 +4,7 @@ Zendesk Pipeline is a command line utility for converting a folder structure of 
 
 ## Prerequisites:
 
-- [NodeJS](https://nodejs.org)
+- [NodeJS](https://nodejs.org) >= v6.0.0
 
 ## Getting Started
 
