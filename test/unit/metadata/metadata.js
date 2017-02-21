@@ -3,6 +3,7 @@ const Metadata = require('../../../lib/metadata/metadata');
 const Dictionary = require('../../../lib/metadata/parser/dictionary');
 const Property = require('../../../lib/metadata/parser/property');
 const hash = require('../../../lib/hash');
+const logger = require('../../../lib/logger');
 
 const fs = require('fs-promise');
 
@@ -59,6 +60,10 @@ describe('Metadata', () => {
     });
 
     describe('read', () => {
+        beforeEach(() => {
+            sandbox.stub(logger, 'warn');
+        });
+
         it('should read user settings from `meta.json`', () => {
             mockFs({
                 dir: {
@@ -136,6 +141,21 @@ describe('Metadata', () => {
             return expect(metadata.read()).to.be.fulfilled;
         });
 
+        it('should not log warning if `.meta.json` is missing in folder', () => {
+            mockFs({
+                dir: {
+                    'meta.json': '{"user": "content"}'
+                }
+            });
+
+            const userScheme = createRootSchemeStub_();
+            const systemScheme = createRootSchemeStub_();
+            const metadata = new Metadata('dir', userScheme, systemScheme);
+
+            return metadata.read()
+                .then(() => expect(logger.warn).to.be.not.called);
+        });
+
         it('should not reject if was not able to parse `.meta.json` content', () => {
             mockFs({
                 dir: {
@@ -149,6 +169,24 @@ describe('Metadata', () => {
             const metadata = new Metadata('dir', userScheme, systemScheme);
 
             return expect(metadata.read()).to.be.fulfilled;
+        });
+
+        it('should log warning if failed to parse contents of `.meta.json`', () => {
+            mockFs({
+                dir: {
+                    'meta.json': '{"user": "content"}',
+                    '.meta.json': 'broken_json'
+                }
+            });
+
+            const userScheme = createRootSchemeStub_();
+            const systemScheme = createRootSchemeStub_();
+            const metadata = new Metadata('dir', userScheme, systemScheme);
+
+            return metadata.read()
+                .then(() => {
+                    expect(logger.warn).to.be.calledWithMatch('Failed to parse .meta.json for dir');
+                });
         });
 
         it('should populate metadata properties as own enumerable and configurable read-only properties', () => {
