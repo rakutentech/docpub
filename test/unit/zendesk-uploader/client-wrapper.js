@@ -3,6 +3,7 @@ const mockFs = require('mock-fs');
 const request = require('request');
 const _ = require('lodash');
 const ZendeskClientWrapper = require('../../../lib/zendesk-uploader/client-wrapper');
+const logger = require('../../../lib/logger');
 
 describe('ZendeskClientWrapper', () => {
     const sandbox = sinon.sandbox.create();
@@ -152,6 +153,18 @@ describe('ZendeskClientWrapper', () => {
             return expect(this.zendeskClient.articles.create(123, {test: 'test'}))
                 .to.be.rejected.then(() => {
                     expect(stub.callCount).to.be.equal(6);
+                });
+        });
+
+        it('should log a warning when a request is retried', () => {
+            const stub = sandbox.stub(this.zendeskStub.articles, 'create').yields(null, null, {});
+            stub.onFirstCall().yields({retryAfter: 0.01});
+            sandbox.stub(logger, 'warn');
+
+            return this.zendeskClient.articles.create(123, {test: 'test'})
+                .then(() => {
+                    expect(logger.warn)
+                        .to.have.been.calledWithMatch(/10 milliseconds/);
                 });
         });
     });
