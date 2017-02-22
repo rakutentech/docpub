@@ -48,3 +48,14 @@ If any of the tests fail to pass or any file doesn't meet the ESLint specificati
 ### Useful Links
 
 - [Zendesk Help Center API](https://developer.zendesk.com/rest_api/docs/help_center/introduction)
+
+## TODO
+
+- Fix code highlighting by inlining `css` and `js` from `highlight.js` into the generated HTML
+- Add config file with possibility to specify `zendeskUrl`, `username` and `token`
+- Add to config possibility to specify category ID to be used by tool
+- Add possibility to redefine each config entry with CLI option
+- Add option `--force` which will enforce uploading without taking in account whether entity already uploaded and not modified from last upload
+- Add typed errors: now in all cases generic errors are being reported, need to make them more specific and make error messages more verbose
+- Discuss links for the between articles - now link will only work if it will point to article folder, not .md file
+- Discuss possibility to deprecate `.meta.json` files and put all the meta information to specific folder in documentation root
