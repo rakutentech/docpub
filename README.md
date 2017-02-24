@@ -13,6 +13,18 @@ Zendesk Pipeline is a command line utility for converting a folder structure of 
     - `ZENDESK_API_USERNAME="{Your username}"`
     - `ZENDESK_API_TOKEN="{Your API token}"`
     - `ZENDESK_URL="{Your fully qualified Zendesk URL}"`
+
+You can alternative create an enviroment profile in your home directory. Using bash, add the variables to your `.bash_profile`, if there is no file, create it.
+
+```
+export ZENDESK_API_USERNAME="{Your username}"
+export ZENDESK_API_TOKEN="{Your API token}"
+export ZENDESK_URL="{Your fully qualified Zendesk URL}"
+
+```
+    
+Then check that the variables are included with `printprev`.
+
 3. Run `npm run zendesk-pipeline -p {path}` to run the utility on the specified path. This will do the following:
     - convert the contained markdown files to HTML
     - create a new category on Zendesk which contains sections matching the specified path's folder structure
