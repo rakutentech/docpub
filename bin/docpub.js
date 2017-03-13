@@ -3,14 +3,14 @@
 /**
  * Binary for the Zendesk Pipeline. Provides CLI for users.
  * Setup for CLI (commands, options and arguments definition) + passing this arguments
- * to ZendeskPipeline instance implemented here.
+ * to DocpubPipeline instance implemented here.
  *
  * This module shall contain as little code as possible because it's almost impossible to test it correctly
  */
 
 const program = require('commander');
 const pkg = require('../package.json');
-const ZendeskPipeline = require('../lib/docpub');
+const DocpubPipeline = require('../lib/docpub');
 
 program
     .version(pkg.version)
@@ -19,9 +19,9 @@ program
 
 program.parse(process.argv);
 
-const zendeskPipeline = new ZendeskPipeline(program);
+const docpubPipeline = new DocpubPipeline(program);
 
-zendeskPipeline
+docpubPipeline
     .uploadCategory()
     .catch(() => {
         process.exit(1);
