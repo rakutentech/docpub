@@ -1,5 +1,5 @@
 {
-  "name": "zendesk-pipeline",
+  "name": "docpub",
   "version": "0.1.0",
   "description": "A script for publishing .md articles, stored in git repo, on ZenDesk",
   "main": "index.js",
@@ -7,7 +7,7 @@
     "node": ">= 6.0.0"
   },
   "bin": {
-    "zendesk-pipeline": "./bin/zendesk-pipeline.js"
+    "docpub": "./bin/docpub.js"
   },
   "keywords": [
     "zendesk",

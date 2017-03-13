@@ -13,7 +13,7 @@ describe('ZendeskPipeline', () => {
         Category = sandbox.stub();
         CategoryUploader = sandbox.stub();
         ZendeskDeleter = sandbox.stub();
-        ZendeskPipeline = proxyquire('../../lib/zendesk-pipeline', {
+        ZendeskPipeline = proxyquire('../../lib/docpub', {
             './logger': logger,
             './category': Category,
             './zendesk-uploader/category-uploader': CategoryUploader,

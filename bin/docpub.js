@@ -10,7 +10,7 @@
 
 const program = require('commander');
 const pkg = require('../package.json');
-const ZendeskPipeline = require('../lib/zendesk-pipeline');
+const ZendeskPipeline = require('../lib/docpub');
 
 program
     .version(pkg.version)

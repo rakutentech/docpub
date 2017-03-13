@@ -25,12 +25,12 @@ export ZENDESK_URL="{Your fully qualified Zendesk URL}"
     
 Then check that the variables are included with `printprev`.
 
-3. Run `npm run zendesk-pipeline -p {path}` to run the utility on the specified path. This will do the following:
+3. Run `npm run docpub -p {path}` to run the utility on the specified path. This will do the following:
     - convert the contained markdown files to HTML
     - create a new category on Zendesk which contains sections matching the specified path's folder structure
     - upload the HTML for each article into the corresponding section
 
-**Note:** Alternatively, you can install the utility globally with `npm install -g` and then run the command `zendesk-pipeline` from the directory that you wish to convert and upload.
+**Note:** Alternatively, you can install the utility globally with `npm install -g` and then run the command `docpub` from the directory that you wish to convert and upload.
 
 ## Folder Structure and Metadata
 
