@@ -1,15 +1,12 @@
-# Zendesk Pipeline
+# DocPub
 
-Zendesk Pipeline is a command line utility for converting a folder structure of markdown files to HTML and uploading the result to Zendesk.
-
-## Prerequisites:
-
-- [NodeJS](https://nodejs.org) >= v6.0.0
+DocPub is a command line utility for converting a folder structure of markdown files to HTML and uploading the result to Zendesk.
 
 ## Getting Started
 
-1. Run `npm install` from the root of the project directory to install npm dependencies.
+1. Install the utility globally with `npm install -g docpub`
 2. Set environment variables for your Zendesk username, token, and url by running the following commands:
+
     - `ZENDESK_API_USERNAME="{Your username}"`
     - `ZENDESK_API_TOKEN="{Your API token}"`
     - `ZENDESK_URL="{Your fully qualified Zendesk URL}"`
@@ -20,17 +17,18 @@ You can alternative create an enviroment profile in your home directory. Using b
 export ZENDESK_API_USERNAME="{Your username}"
 export ZENDESK_API_TOKEN="{Your API token}"
 export ZENDESK_URL="{Your fully qualified Zendesk URL}"
-
 ```
     
-Then check that the variables are included with `printprev`.
+Then check that the variables are included with `env`.
 
-3. Run `npm run docpub -p {path}` to run the utility on the specified path. This will do the following:
-    - convert the contained markdown files to HTML
-    - create a new category on Zendesk which contains sections matching the specified path's folder structure
-    - upload the HTML for each article into the corresponding section
+3. Run the command `docpub` from the directory that you wish to convert and upload.
 
-**Note:** Alternatively, you can install the utility globally with `npm install -g` and then run the command `docpub` from the directory that you wish to convert and upload.
+This will do the following:
+- Convert the contained markdown files to HTML
+- Create a new category on Zendesk which contains sections matching the specified path's folder structure
+- Upload the HTML for each article into the corresponding section
+
+**Note:** Alternatively, you can Run `docpub -p {path}` to run the utility on the specified path.
 
 ## Folder Structure and Metadata
 
@@ -56,18 +54,3 @@ Tests are divided into unit tests and functional tests, and utilize [SinonJS](ht
 [husky](https://github.com/typicode/husky) is used to provide hooks prior to committing and versioning. This will run the unit and functional tests as well as [ESLint](http://eslint.org/) to make sure that the code style is correct and has no syntax errors.
 
 If any of the tests fail to pass or any file doesn't meet the ESLint specifications, you will not be allowed to commit or version.
-
-### Useful Links
-
-- [Zendesk Help Center API](https://developer.zendesk.com/rest_api/docs/help_center/introduction)
-
-## TODO
-
-- Fix code highlighting by inlining `css` and `js` from `highlight.js` into the generated HTML
-- Add config file with possibility to specify `zendeskUrl`, `username` and `token`
-- Add to config possibility to specify category ID to be used by tool
-- Add possibility to redefine each config entry with CLI option
-- Add option `--force` which will enforce uploading without taking in account whether entity already uploaded and not modified from last upload
-- Add typed errors: now in all cases generic errors are being reported, need to make them more specific and make error messages more verbose
-- Discuss links for the between articles - now link will only work if it will point to article folder, not .md file
-- Discuss possibility to deprecate `.meta.json` files and put all the meta information to specific folder in documentation root
