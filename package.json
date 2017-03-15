@@ -1,6 +1,6 @@
 {
   "name": "docpub",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A script for publishing .md articles, stored in git repo, on ZenDesk",
   "main": "index.js",
   "engines": {
