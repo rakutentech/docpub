@@ -2,30 +2,37 @@ const Promise = require('bluebird');
 const Uploader = require('../../../lib/zendesk-uploader/uploader');
 const apiUtils = require('../../../lib/zendesk-uploader/api-utils');
 
+const createDummyConfig = require('./test-utils').createDummyConfig;
+
 describe('Uploader', () => {
     const sandbox = sinon.sandbox.create();
-    beforeEach(() => {
-        process.env.ZENDESK_API_USERNAME = 'username';
-        process.env.ZENDESK_API_TOKEN = 'token';
-        process.env.ZENDESK_URL = 'url';
-    });
+
     afterEach(() => {
         sandbox.restore();
-        delete process.env.ZENDESK_API_USERNAME;
-        delete process.env.ZENDESK_API_TOKEN;
-        delete process.env.ZENDESK_URL;
     });
 
     describe('constructor', () => {
+        it('should throw if no document provided', () => {
+            expect(() => new Uploader()).to.throw(/No document/);
+        });
+
+        it('should throw if no config provided', () => {
+            expect(() => new Uploader({})).to.throw(/No config/);
+        });
+
         it('should not initialize an instance of zendesk client if one was already passed with the constructor', () => {
-            const zendeskClient = sinon.stub().returns({});
-            sandbox.spy(apiUtils, 'getClient');
+            const zendeskClient = sandbox.stub();
+            sandbox.stub(apiUtils, 'getClient');
+
             /*eslint-disable no-new*/
-            new Uploader({meta: {}}, zendeskClient);
+            new Uploader(
+                {meta: {}},
+                createDummyConfig(),
+                zendeskClient
+             );
             /*eslint-enable no-new*/
 
-            expect(apiUtils.getClient)
-                .to.not.have.been.called;
+            expect(apiUtils.getClient).to.be.not.called;
         });
     });
 
@@ -36,10 +43,9 @@ describe('Uploader', () => {
                     title: 'Test Title'
                 }
             };
-            const uploader = new Uploader(document);
+            const uploader = createUploader_(document);
 
-            return expect(uploader.create())
-                .to.be.fulfilled;
+            return expect(uploader.create()).to.be.fulfilled;
         });
     });
 
@@ -47,7 +53,7 @@ describe('Uploader', () => {
         it('should return a promise', () => {
             const document = {isChanged: true};
 
-            const uploader = new Uploader(document);
+            const uploader = createUploader_(document);
             const result = uploader.sync();
 
             expect(result).to.be.instanceOf(Promise);
@@ -55,7 +61,7 @@ describe('Uploader', () => {
 
         it('should return true if the document has changed', () => {
             const document = {isChanged: true};
-            const uploader = new Uploader(document);
+            const uploader = createUploader_(document);
 
             return expect(uploader.sync())
                 .to.become(true);
@@ -63,10 +69,16 @@ describe('Uploader', () => {
 
         it('should return false if the document has not changed', () => {
             const document = {isChanged: false};
-            const uploader = new Uploader(document);
+            const uploader = createUploader_(document);
 
             return expect(uploader.sync())
                 .to.become(false);
         });
     });
 });
+
+function createUploader_(document) {
+    const config = createDummyConfig();
+
+    return new Uploader(document, config);
+}
