@@ -1,5 +1,8 @@
 # DocPub
 
+[![Build Status](https://travis-ci.org/rakutentech/docpub.svg?branch=master)](https://travis-ci.org/rakutentech/docpub)
+[![Coverage Status](https://coveralls.io/repos/github/rakutentech/docpub/badge.svg)](https://coveralls.io/github/rakutentech/docpub)
+
 DocPub is a command line utility for converting a folder structure of markdown files to HTML and uploading the result to Zendesk.
 
 ## Getting Started
@@ -18,7 +21,7 @@ export ZENDESK_API_USERNAME="{Your username}"
 export ZENDESK_API_TOKEN="{Your API token}"
 export ZENDESK_URL="{Your fully qualified Zendesk URL}"
 ```
-    
+
 Then check that the variables are included with `env`.
 
 3. Run the command `docpub` from the directory that you wish to convert and upload.
