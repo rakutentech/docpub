@@ -26,7 +26,7 @@
   "scripts": {
     "lint": "eslint .",
     "test": "istanbul test _mocha -- --recursive test/",
-    "precommit": "npm run lint && npm test",
+    "precommit": "npm run lint",
     "preversion": "npm run lint && npm test"
   },
   "dependencies": {
