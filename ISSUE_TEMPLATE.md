@@ -5,7 +5,7 @@ Output of `docpub --version`:
 
 ...
 
-Contents of `docpub.config` file:
+Contents of `docpub.config` file (if you have ZenDesk credentials declared in config, please strip it before):
 
 ```json
 
