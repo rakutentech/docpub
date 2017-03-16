@@ -1,5 +1,4 @@
 language: node_js
-before_install: 'nvm install 8'
 script: npm run ${NPM_SCRIPT}
 after_success: cat ${TRAVIS_BUILD_DIR}/coverage/lcov.info | coveralls
 
@@ -15,7 +14,4 @@ matrix:
           env: NPM_SCRIPT='test --coverage'
 
         - node_js: '7'
-          env: NPM_SCRIPT='test --coverage'
-
-        - node_js: '8'
           env: NPM_SCRIPT='test --coverage'
