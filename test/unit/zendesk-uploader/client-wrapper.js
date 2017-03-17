@@ -146,6 +146,27 @@ describe('ZendeskClientWrapper', () => {
             });
         });
 
+        it('should retry after twice as long as the last retry for the request when there are subsequent 500 errors', () => {
+            const stub = sandbox.stub(this.zendeskStub.articles, 'create');
+            stub.yields(null, null, {});
+            stub.onFirstCall().yields({statusCode: 503});
+            stub.onSecondCall().yields({statusCode: 503});
+            stub.onThirdCall().yields({statusCode: 503});
+
+            let clock = sandbox.useFakeTimers();
+            let createArticle = this.zendeskClient.articles.create(123, {});
+
+            expect(stub).to.have.been.calledOnce;
+            clock.tick(500);
+            expect(stub).to.have.been.calledTwice;
+            clock.tick(1000);
+            expect(stub).to.have.been.calledThrice;
+            clock.tick(2000);
+            return createArticle.then(() => {
+                expect(stub.callCount).to.be.equal(4);
+            });
+        });
+
         it('should reject the promise if the request fails after 5 retries', () => {
             const stub = sandbox.stub(this.zendeskStub.articles, 'create')
                 .yields({retryAfter: 0.01});
