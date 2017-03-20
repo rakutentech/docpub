@@ -412,11 +412,12 @@ describe('CategoryUploader', () => {
             it('should reject if failed to update category hash', () => {
                 const category = testUtils.createCategory({isChanged: true});
                 const uploader = new CategoryUploader(category, this.zendeskClient);
+                const error = new Error('error');
 
-                category.updateHash.rejects('Error');
+                category.updateHash.rejects(error);
 
                 return expect(uploader.sync())
-                    .to.be.rejectedWith('Error');
+                    .to.be.rejectedWith(error);
             });
 
             it('should not update category hash if category has not been changed', () => {

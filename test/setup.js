@@ -6,8 +6,6 @@ require('mock-fs'); //make sure it's called before tests
 const chai = require('chai');
 const Promise = require('bluebird');
 
-require('sinon-as-promised')(Promise);
-
 Promise.config({
     longStackTraces: true
 });

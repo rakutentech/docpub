@@ -465,12 +465,13 @@ describe('Article', () => {
 
         it('should reject promise if write failed', () => {
             const article = createArticle_();
-            Object.defineProperty(article, 'hash', {value: 'abcdef'});
+            const error = new Error('error');
 
-            article.meta.write.rejects('Error');
+            Object.defineProperty(article, 'hash', {value: 'abcdef'});
+            article.meta.write.rejects(error);
 
             return expect(article.updateHash())
-                .to.be.rejectedWith('Error');
+                .to.be.rejectedWith(error);
         });
     });
 
