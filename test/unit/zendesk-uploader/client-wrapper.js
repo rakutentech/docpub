@@ -188,6 +188,17 @@ describe('ZendeskClientWrapper', () => {
                         .to.have.been.calledWithMatch(/10 milliseconds/);
                 });
         });
+
+        it('should not allow more than 29 concurrent connections', () => {
+            let connections = 0;
+            sandbox.stub(this.zendeskStub.articles, 'create', () => connections++);
+
+            for (let i = 0; i < 30; i++) {
+                this.zendeskClient.articles.create(123, {test: 'test'});
+            }
+
+            expect(connections).to.be.equal(29);
+        });
     });
 
     describe('articleattachments.create', () => {
