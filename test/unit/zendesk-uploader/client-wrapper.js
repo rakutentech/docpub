@@ -147,33 +147,38 @@ describe('ZendeskClientWrapper', () => {
         });
 
         it('should retry after twice as long as the last retry for the request when there are subsequent 500 errors', () => {
-            const stub = sandbox.stub(this.zendeskStub.articles, 'create');
-            stub.yields(null, null, {});
-            stub.onFirstCall().yields({statusCode: 503});
-            stub.onSecondCall().yields({statusCode: 503});
-            stub.onThirdCall().yields({statusCode: 503});
+            const stub = sandbox.stub(this.zendeskStub.articles, 'create').yields({statusCode: 503});
+            stub.onCall(3).yields(null, null, {});
 
             let clock = sandbox.useFakeTimers();
             let createArticle = this.zendeskClient.articles.create(123, {});
 
-            expect(stub).to.have.been.calledOnce;
-            clock.tick(500);
-            expect(stub).to.have.been.calledTwice;
-            clock.tick(1000);
-            expect(stub).to.have.been.calledThrice;
-            clock.tick(2000);
+            clock.tick(500 + 1000 + 2000);
             return createArticle.then(() => {
                 expect(stub.callCount).to.be.equal(4);
             });
         });
 
-        it('should reject the promise if the request fails after 5 retries', () => {
+        it('should not wait longer than 8000ms on subsequent retries due to 500 errors', () => {
+            const stub = sandbox.stub(this.zendeskStub.articles, 'create').yields({statusCode: 503});
+            stub.onCall(6).yields(null, null, {});
+
+            let clock = sandbox.useFakeTimers();
+            let createArticle = this.zendeskClient.articles.create(123, {});
+
+            clock.tick(500 + 1000 + 2000 + 4000 + 8000 + 8000);
+            return createArticle.then(() => {
+                expect(stub.callCount).to.be.equal(7);
+            });
+        });
+
+        it('should reject the promise if the request fails after 6 retries', () => {
             const stub = sandbox.stub(this.zendeskStub.articles, 'create')
                 .yields({retryAfter: 0.01});
 
             return expect(this.zendeskClient.articles.create(123, {test: 'test'}))
                 .to.be.rejected.then(() => {
-                    expect(stub.callCount).to.be.equal(6);
+                    expect(stub.callCount).to.be.equal(7);
                 });
         });
 
