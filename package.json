@@ -2,6 +2,10 @@
   "name": "docpub",
   "version": "0.2.0",
   "description": "A script for publishing .md articles, stored in git repo, on ZenDesk",
+  "repository" : {
+    "type" : "git",
+    "url" : "https://github.com/rakutentech/docpub"
+  },
   "main": "index.js",
   "engines": {
     "node": ">= 6.0.0"
@@ -19,8 +23,8 @@
     "markdown"
   ],
   "authors": [
-    "ilia.isupov@rakuten.com",
-    "cory.caywood@rakuten.com"
+    "swinx89@gmail.com",
+    "cory@floatinginspace.net"
   ],
   "license": "MIT",
   "scripts": {
