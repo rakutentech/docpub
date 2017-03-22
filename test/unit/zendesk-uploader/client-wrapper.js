@@ -153,7 +153,13 @@ describe('ZendeskClientWrapper', () => {
             let clock = sandbox.useFakeTimers();
             let createArticle = this.zendeskClient.articles.create(123, {});
 
-            clock.tick(500 + 1000 + 2000);
+            clock.tick(500);
+            expect(stub).to.be.calledTwice;
+
+            clock.tick(1000);
+            expect(stub).to.be.calledThrice;
+
+            clock.tick(2000);
             return createArticle.then(() => {
                 expect(stub.callCount).to.be.equal(4);
             });
@@ -166,7 +172,10 @@ describe('ZendeskClientWrapper', () => {
             let clock = sandbox.useFakeTimers();
             let createArticle = this.zendeskClient.articles.create(123, {});
 
-            clock.tick(500 + 1000 + 2000 + 4000 + 8000 + 8000);
+            clock.tick(500 + 1000 + 2000 + 4000 + 8000);
+            expect(stub.callCount).to.be.equal(6);
+
+            clock.tick(8000);
             return createArticle.then(() => {
                 expect(stub.callCount).to.be.equal(7);
             });
