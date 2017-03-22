@@ -9,6 +9,7 @@ const MarkdownRenderer = require('../../lib/md-renderer');
 const metadata = require('../../lib/metadata');
 const Metadata = require('../../lib/metadata/metadata');
 const logger = require('../../lib/logger');
+const createDummyConfig = require('./test-utils').createDummyConfig;
 
 describe('Article', () => {
     const sandbox = sinon.sandbox.create();
@@ -26,17 +27,17 @@ describe('Article', () => {
         it('should throw if path is not string', () => {
             const path = {};
 
-            expect(() => new Section(path)).to.throw(/string/);
+            expect(() => new Article(path)).to.throw(/string/);
         });
 
         it('should throw if path empty', () => {
             const path = '';
 
-            expect(() => new Section(path)).to.throw(/empty/);
+            expect(() => new Article(path)).to.throw(/empty/);
         });
 
         it('should throw if parent section is not passed', () => {
-            expect(() => new Article('.')).to.throw(/Missing section/);
+            expect(() => new Article('.', createDummyConfig())).to.throw(/Missing section/);
         });
 
         it('should set article path as passed path', () => {
@@ -47,7 +48,7 @@ describe('Article', () => {
 
         it('should set parent section as passed section', () => {
             const section = sinon.createStubInstance(Section);
-            const article = new Article('path', section);
+            const article = createArticle_({section: section});
 
             expect(article.section).to.be.equal(section);
         });
@@ -97,7 +98,7 @@ describe('Article', () => {
 
         it('should return true if article has same hash and currentHash but one of child resources changed', () => {
             const article = createArticle_();
-            const resource = new Resource('path', article);
+            const resource = new Resource('path', createDummyConfig(), article);
 
             article.meta = {hash: `abcdef`};
             Object.defineProperty(article, 'hash', {value: 'abcdef'});
@@ -111,7 +112,7 @@ describe('Article', () => {
 
         it('should return false if document has same hash and currentHash and no child resources changed', () => {
             const article = createArticle_();
-            const resource = new Resource('path', article);
+            const resource = new Resource('path', createDummyConfig(), article);
 
             article.meta = {hash: `abcdef`};
             Object.defineProperty(article, 'hash', {value: 'abcdef'});
@@ -133,7 +134,7 @@ describe('Article', () => {
             const section = sinon.createStubInstance(Section);
             section.meta = {zendeskId: 123456};
 
-            const article = new Article('.', section);
+            const article = new Article('.', createDummyConfig(), section);
 
             const expectedHash = hash('abcdef' + hash('content_goes_here') + '123456');
 
@@ -433,10 +434,10 @@ describe('Article', () => {
             const article = createArticle_();
             Object.defineProperty(article, 'hash', {value: 'abcdef'});
 
-            const resource = new Resource('res_name', article);
+            const resource = new Resource('res_name', createDummyConfig(), article);
             Object.defineProperty(resource, 'hash', {value: '123abc'});
 
-            const anotherResource = new Resource('another_res_name', article);
+            const anotherResource = new Resource('another_res_name', createDummyConfig(), article);
             Object.defineProperty(anotherResource, 'hash', {value: '456def'});
 
             article.setChildren([resource, anotherResource]);
@@ -538,11 +539,11 @@ describe('Article', () => {
     });
 });
 
-function createArticle_(opts) {
+function createArticle_(opts, config) {
     opts = _.defaults(opts || {}, {
         path: '.',
         section: sinon.createStubInstance(Section)
     });
 
-    return new Article(opts.path, opts.section);
+    return new Article(opts.path, createDummyConfig(config), opts.section);
 }

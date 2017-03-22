@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const createDummyConfig = require('../test-utils').createDummyConfig;
 
 function createArticle(opts) {
     opts = opts || {};
@@ -92,14 +93,6 @@ function createResource(opts) {
     });
 
     return resource;
-}
-
-function createDummyConfig(params) {
-    return _.defaults(params || {}, {
-        username: 'default_username',
-        token: 'default_token',
-        url: 'default_url'
-    });
 }
 
 exports.createArticle = createArticle;

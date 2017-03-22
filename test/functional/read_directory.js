@@ -1,6 +1,7 @@
 const Category = require('../../lib/category');
 const MarkdownRenderer = require('../../lib/md-renderer');
 const path = require('path');
+const createDummyConfig = require('../unit/zendesk-uploader/test-utils').createDummyConfig;
 
 describe('Documentation directory reading', () => {
     const sandbox = sinon.sandbox.create();
@@ -13,20 +14,20 @@ describe('Documentation directory reading', () => {
         const dirPath = path.resolve(__dirname, 'fixtures/documentation-folder-structure/correct/with-system-meta');
 
         it('should read directory without errors', () => {
-            const category = new Category(dirPath);
+            const category = new Category(dirPath, createDummyConfig());
 
             return expect(category.read()).to.be.fulfilled;
         });
 
         it('should successfully read directory without .meta.md files', () => {
             const missingMetaPath = path.resolve(__dirname, 'fixtures/documentation-folder-structure/correct/without-system-meta');
-            const category = new Category(missingMetaPath);
+            const category = new Category(missingMetaPath, createDummyConfig());
 
             return expect(category.read()).to.be.fulfilled;
         });
 
         it('should build correct directory structure', () => {
-            const category = new Category(dirPath);
+            const category = new Category(dirPath, createDummyConfig());
 
             return category.read()
                 .then(() => {
@@ -42,7 +43,7 @@ describe('Documentation directory reading', () => {
         });
 
         it('should correctly read user metadata for each entity', () => {
-            const category = new Category(dirPath);
+            const category = new Category(dirPath, createDummyConfig());
 
             return category.read()
                 .then(() => {
@@ -68,7 +69,7 @@ describe('Documentation directory reading', () => {
         });
 
         it('should correctly read system metadata for each entity', () => {
-            const category = new Category(dirPath);
+            const category = new Category(dirPath, createDummyConfig());
 
             return category.read()
                 .then(() => {
@@ -92,7 +93,7 @@ describe('Documentation directory reading', () => {
         });
 
         it('should correctly read article resources and content', () => {
-            const category = new Category(dirPath);
+            const category = new Category(dirPath, createDummyConfig());
             sandbox.spy(MarkdownRenderer.prototype, 'render');
 
             return category.read()
@@ -126,7 +127,7 @@ describe('Documentation directory reading', () => {
 
         it('should fail if category meta missing', () => {
             const dirPath = path.resolve(brokenDirPath, 'missing-category-meta');
-            const category = new Category(dirPath);
+            const category = new Category(dirPath, createDummyConfig());
 
             return expect(category.read())
                 .to.be.rejectedWith(/missing-category-meta\/meta.json does not exist/);
@@ -134,7 +135,7 @@ describe('Documentation directory reading', () => {
 
         it('should fail if section meta is missing', () => {
             const dirPath = path.resolve(brokenDirPath, 'missing-section-meta');
-            const category = new Category(dirPath);
+            const category = new Category(dirPath, createDummyConfig());
 
             return expect(category.read())
                 .to.be.rejectedWith(/missing-section-meta\/section\/meta.json does not exist/);
@@ -142,7 +143,7 @@ describe('Documentation directory reading', () => {
 
         it('should fail if article meta is missing', () => {
             const dirPath = path.resolve(brokenDirPath, 'missing-article-meta');
-            const category = new Category(dirPath);
+            const category = new Category(dirPath, createDummyConfig());
 
             return expect(category.read())
                 .to.be.rejectedWith(/missing-article-meta\/section\/article\/meta.json does not exist/);
@@ -150,7 +151,7 @@ describe('Documentation directory reading', () => {
 
         it('should fail if markdown file is not presented in article folder', () => {
             const dirPath = path.resolve(brokenDirPath, 'missing-article-md');
-            const category = new Category(dirPath);
+            const category = new Category(dirPath, createDummyConfig());
 
             return expect(category.read())
                 .to.be.rejectedWith(/No markdown files found/);
@@ -158,7 +159,7 @@ describe('Documentation directory reading', () => {
 
         it('should fail if found more then one markdown file for article', () => {
             const dirPath = path.resolve(brokenDirPath, 'multiple-article-md');
-            const category = new Category(dirPath);
+            const category = new Category(dirPath, createDummyConfig());
 
             return expect(category.read())
                 .to.be.rejectedWith(/Found more than 1 markdown file/);
@@ -166,7 +167,7 @@ describe('Documentation directory reading', () => {
 
         it('should fail if title missed in meta.json', () => {
             const dirPath = path.resolve(brokenDirPath, 'missing-meta-title');
-            const category = new Category(dirPath);
+            const category = new Category(dirPath, createDummyConfig());
 
             return expect(category.read())
                 .to.be.rejectedWith(/title/);
@@ -174,7 +175,7 @@ describe('Documentation directory reading', () => {
 
         it('should fail if meta.json contains something else than expected properties', () => {
             const dirPath = path.resolve(brokenDirPath, 'unknown-meta-key');
-            const category = new Category(dirPath);
+            const category = new Category(dirPath, createDummyConfig());
 
             return expect(category.read())
                 .to.be.rejectedWith(/foo/);

@@ -174,6 +174,73 @@ describe('Config', () => {
 
                 expect(() => new Config('./docpub.config')).to.throw(/string/);
             });
+
+            describe('renderer', () => {
+                it('should not throw if `renderer` is not provided', () => {
+                    stubConfig_({
+                        path: './docpub.config',
+                        config: {
+                            username: 'default_username',
+                            token: 'default_token',
+                            url: 'default_url'
+                        }
+                    });
+
+                    expect(() => new Config('./docpub.config')).to.not.throw();
+                });
+
+                it('should throw if `highlight` is not a boolean', () => {
+                    stubConfig_({
+                        path: './docpub.config',
+                        config: {
+                            username: 'default_username',
+                            token: 'default_token',
+                            url: 'default_url',
+                            renderer: {
+                                highlight: 'test'
+                            }
+                        }
+                    });
+
+                    expect(() => new Config('./docpub.config')).to.throw(/boolean/);
+                });
+            });
+        });
+
+        describe('defaults', () => {
+            describe('renderer', () => {
+                it('should use `true` as default `highlight` value', () => {
+                    stubConfig_({
+                        path: './docpub.config',
+                        config: {
+                            username: 'default_username',
+                            token: 'default_token',
+                            url: 'default_url',
+                            renderer: {}
+                        }
+                    });
+                    const config = new Config('./docpub.config');
+
+                    expect(config.renderer.highlight).to.be.true;
+                });
+
+                it('should override default `highlight` value if one is provided', () => {
+                    stubConfig_({
+                        path: './docpub.config',
+                        config: {
+                            username: 'default_username',
+                            token: 'default_token',
+                            url: 'default_url',
+                            renderer: {
+                                highlight: false
+                            }
+                        }
+                    });
+                    const config = new Config('./docpub.config');
+
+                    expect(config.renderer.highlight).to.be.false;
+                });
+            });
         });
 
         describe('overrides', () => {

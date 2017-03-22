@@ -6,6 +6,7 @@ const Category = require('../../lib/category');
 const metadata = require('../../lib/metadata');
 const Metadata = require('../../lib/metadata/metadata');
 const logger = require('../../lib/logger');
+const createDummyConfig = require('./test-utils').createDummyConfig;
 
 describe('Section', () => {
     const sandbox = sinon.sandbox.create();
@@ -28,7 +29,7 @@ describe('Section', () => {
         });
 
         it('should throw if parent category is not passed', () => {
-            expect(() => new Section('.')).to.throw(/Missing parent category/);
+            expect(() => new Section('.', createDummyConfig())).to.throw(/Missing parent category/);
         });
 
         it('should set passed path as section path', () => {
@@ -39,7 +40,7 @@ describe('Section', () => {
 
         it('should set parent category as passed category', () => {
             const category = sinon.createStubInstance(Category);
-            const section = new Section('path', category);
+            const section = createSection_({category: category});
 
             expect(section.category).to.be.equal(category);
         });
@@ -144,11 +145,11 @@ describe('Section', () => {
     });
 });
 
-function createSection_(opts) {
+function createSection_(opts, config) {
     opts = _.defaults(opts || {}, {
         path: '.',
         category: sinon.createStubInstance(Category)
     });
 
-    return new Section(opts.path, opts.category);
+    return new Section(opts.path, createDummyConfig(config), opts.category);
 }

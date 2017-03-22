@@ -1,5 +1,7 @@
 const _ = require('lodash');
 const Document = require('../../lib/document');
+const createDocument = require('./test-utils').createDocument;
+const createDummyConfig = require('./test-utils').createDummyConfig;
 
 describe('Document', () => {
     const sandbox = sinon.sandbox.create();
@@ -21,18 +23,24 @@ describe('Document', () => {
             expect(() => new Document(path)).to.throw(/empty/);
         });
 
+        it('should throw if config is not provided', () => {
+            expect(() => new Document('path')).to.throw(/config/);
+        });
+
         it('should throw if parent is not instance of Document', () => {
-            expect(() => new Document('path', {})).to.throw(/Document/);
+            const parent = {};
+
+            expect(() => new Document('path', createDummyConfig(), parent)).to.throw(/Document/);
         });
 
         it('should set passed path', () => {
-            const doc = new Document('some_path');
+            const doc = createDocument({path: 'some_path'});
 
             expect(doc.path).to.be.equal('some_path');
         });
 
         it('should set document type as `generic_document`', () => {
-            const doc = new Document('some_path');
+            const doc = createDocument({path: 'path'});
 
             expect(doc.type).to.be.eql('generic_document');
         });
@@ -40,20 +48,20 @@ describe('Document', () => {
 
     describe('isNew', () => {
         it('should return false if document has no meta defined', () => {
-            const document = new Document('path');
+            const document = createDocument();
 
             expect(document.isNew).to.be.false;
         });
 
         it('should return true if document has zendeskId equal to 0', () => {
-            const document = new Document('path');
+            const document = createDocument();
             document.meta = {zendeskId: 0};
 
             expect(document.isNew).to.be.true;
         });
 
         it('should return false if document has zendeskId different from 0', () => {
-            const document = new Document('path');
+            const document = createDocument();
             document.meta = {zendeskId: 123456};
 
             expect(document.isNew).to.be.false;
@@ -62,13 +70,13 @@ describe('Document', () => {
 
     describe('isChanged', () => {
         it('should return false if document has no meta defined', () => {
-            const document = new Document('path');
+            const document = createDocument();
 
             expect(document.isChanged).to.be.false;
         });
 
         it('should return true if document hash differes from document meta.userMetaHash', () => {
-            const document = new Document('path');
+            const document = createDocument();
 
             Object.defineProperty(document, 'hash', {value: 'abcdef'});
             document.meta = {hash: `a0b1c2`};
@@ -77,7 +85,7 @@ describe('Document', () => {
         });
 
         it('should return false if document has same hash and meta.userMetaHash', () => {
-            const document = new Document('path');
+            const document = createDocument();
 
             Object.defineProperty(document, 'hash', {value: 'abcdef'});
             document.meta = {hash: `abcdef`};
@@ -88,13 +96,13 @@ describe('Document', () => {
 
     describe('hash', () => {
         it('should return empty string if document has no meta defined', () => {
-            const document = new Document('path');
+            const document = createDocument();
 
             expect(document.hash).to.be.equal('');
         });
 
         it('should return user meta hash if meta defined', () => {
-            const document = new Document('path');
+            const document = createDocument();
 
             document.meta = {userMetaHash: 'abcdef'};
 
@@ -104,7 +112,7 @@ describe('Document', () => {
 
     describe('read', () => {
         it('should read metadata', () => {
-            const doc = new Document('some_path');
+            const doc = createDocument();
             doc.meta = {read: sandbox.stub().resolves()};
 
             return doc.read()
@@ -116,7 +124,7 @@ describe('Document', () => {
 
     describe('updateHash', () => {
         it('should update hash in meta with own hash', () => {
-            const document = new Document('path');
+            const document = createDocument();
 
             document.meta = buildMeta_('abcdef');
 
@@ -128,7 +136,7 @@ describe('Document', () => {
         });
 
         it('should write updated meta to the disc', () => {
-            const document = new Document('path');
+            const document = createDocument();
 
             document.meta = buildMeta_();
 
@@ -140,7 +148,7 @@ describe('Document', () => {
         });
 
         it('should reject if error happened on meta write', () => {
-            const document = new Document('path');
+            const document = createDocument();
             const error = new Error('error');
 
             document.meta = buildMeta_();
@@ -161,14 +169,14 @@ describe('Document', () => {
 
     describe('setChildren', () => {
         it('should throw if any of children is not instance of Document', () => {
-            const document = new Document('path');
+            const document = createDocument();
 
             expect(() => document.setChildren([{}])).to.throw(/Document/);
         });
 
         it('should set children of the document', () => {
-            const document = new Document('path');
-            const child = new Document('another_path');
+            const document = createDocument();
+            const child = createDocument({path: 'another_path'});
 
             child.meta = {zendeskId: 123};
             document.setChildren([child]);
@@ -177,8 +185,8 @@ describe('Document', () => {
         });
 
         it('should remove children if called with falsy argument', () => {
-            const document = new Document('path');
-            const child = new Document('another_path');
+            const document = createDocument();
+            const child = createDocument({path: 'another_path'});
 
             child.meta = {zendeskId: 123};
             document.setChildren([child]);
@@ -267,16 +275,16 @@ describe('Document', () => {
 
     describe('flatTree', () => {
         it('should add document to documents list', () => {
-            const document = new Document('.');
+            const document = createDocument({path: '.'});
             const result = document.flatTree();
 
             expect(result).to.include(document);
         });
 
         it('should include document`s children to the list', () => {
-            const document = new Document('doc');
-            const child = new Document('child');
-            const anotherChild = new Document('another_child');
+            const document = createDocument({path: 'doc'});
+            const child = createDocument({path: 'child'});
+            const anotherChild = createDocument({path: 'another_child'});
 
             document.setChildren([child, anotherChild]);
 
@@ -287,12 +295,12 @@ describe('Document', () => {
         });
 
         it('should recursively include children of own children', () => {
-            const root = new Document('parent');
+            const root = createDocument({path: 'parent'});
             let currentChild = root;
 
             const children = [];
             for (let i = 0; i < 100; i++) {
-                const child = new Document(`child_${i}`);
+                const child = createDocument({path: `child_${i}`});
                 currentChild.setChildren([child]);
                 children.push(child);
                 currentChild = child;
@@ -321,7 +329,7 @@ function buildDocumentTree_(scheme, parent) {
 }
 
 function documentForScheme_(scheme, parent) {
-    const document = new Document(scheme.path, parent);
+    const document = createDocument({path: scheme.path, parent: parent});
 
     document.meta = {zendeskId: scheme.id};
 
