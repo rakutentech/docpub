@@ -148,7 +148,7 @@ describe('ZendeskClientWrapper', () => {
 
         it('should retry after twice as long as the last retry for the request when there are subsequent 500 errors', () => {
             const stub = sandbox.stub(this.zendeskStub.articles, 'create').yields({statusCode: 503});
-            stub.onCall(3).yields(null, null, {});
+            stub.onCall(2).yields(null, null, {});
 
             let clock = sandbox.useFakeTimers();
             let createArticle = this.zendeskClient.articles.create(123, {});
@@ -156,12 +156,12 @@ describe('ZendeskClientWrapper', () => {
             clock.tick(500);
             expect(stub).to.be.calledTwice;
 
-            clock.tick(1000);
-            expect(stub).to.be.calledThrice;
+            clock.tick(500);
+            expect(stub).to.be.calledTwice;
 
-            clock.tick(2000);
+            clock.tick(500);
             return createArticle.then(() => {
-                expect(stub.callCount).to.be.equal(4);
+                expect(stub).to.be.calledThrice;
             });
         });
 
