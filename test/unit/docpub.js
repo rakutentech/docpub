@@ -7,7 +7,7 @@ let CategoryUploader;
 let ZendeskDeleter;
 let Config;
 
-describe('DocpubPipeline', () => {
+describe('Docpub', () => {
     const sandbox = sinon.sandbox.create();
 
     beforeEach(() => {
@@ -40,7 +40,7 @@ describe('DocpubPipeline', () => {
         });
 
         it('should use path passed in params if it was passed', () => {
-            const pipeline = new Docpub({docPath: 'foo'});
+            const pipeline = new Docpub({path: 'foo'});
 
             return pipeline.uploadCategory()
                 .then(() => {
@@ -60,7 +60,7 @@ describe('DocpubPipeline', () => {
         });
 
         it('should resolve path received in parameters', () => {
-            const pipeline = new Docpub({docPath: '../bar/foo'});
+            const pipeline = new Docpub({path: '../bar/foo'});
 
             return pipeline.uploadCategory()
                 .then(() => {
@@ -80,7 +80,7 @@ describe('DocpubPipeline', () => {
         it('should create config passing config path and doc path to it', () => {
             /*eslint-disable no-new*/
             new Docpub({
-                docPath: 'path/to/doc/dir',
+                path: 'path/to/doc/dir',
                 configPath: 'path/to/config.file'
             });
             /*eslint-enable no-new*/

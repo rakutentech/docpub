@@ -12,12 +12,12 @@ describe('Config', () => {
             expect(() => new Config()).to.throw(/No config path and no doc path/);
         });
 
-        it('should read config from the ', () => {
+        it('should read config from the file passed in path', () => {
             stubConfig_({
                 path: 'foo/bar/my.config',
                 config: {
                     username: 'my_username',
-                    apiToken: 'my_token',
+                    token: 'my_token',
                     url: 'my_url'
                 }
             });
@@ -25,7 +25,7 @@ describe('Config', () => {
             const config = new Config('./foo/bar/my.config');
 
             expect(config).to.have.property('username', 'my_username');
-            expect(config).to.have.property('apiToken', 'my_token');
+            expect(config).to.have.property('token', 'my_token');
             expect(config).to.have.property('url', 'my_url');
         });
 
@@ -34,7 +34,7 @@ describe('Config', () => {
                 path: 'docpub.conf',
                 config: {
                     username: 'my_username',
-                    apiToken: 'my_token',
+                    token: 'my_token',
                     url: 'my_url'
                 }
             });
@@ -42,20 +42,20 @@ describe('Config', () => {
             const config = new Config(null, './');
 
             expect(config).to.have.property('username', 'my_username');
-            expect(config).to.have.property('apiToken', 'my_token');
+            expect(config).to.have.property('token', 'my_token');
             expect(config).to.have.property('url', 'my_url');
         });
 
         it('should use config by path if both configs available', () => {
             const configInDirectory = JSON.stringify({
                 username: 'directory_username',
-                apiToken: 'directory_token',
+                token: 'directory_token',
                 url: 'directory_url'
             });
 
             const configByPath = JSON.stringify({
                 username: 'path_username',
-                apiToken: 'path_token',
+                token: 'path_token',
                 url: 'path_url'
             });
 
@@ -67,7 +67,7 @@ describe('Config', () => {
             const config = new Config('some/path/awesome.config', './');
 
             expect(config).to.have.property('username', 'path_username');
-            expect(config).to.have.property('apiToken', 'path_token');
+            expect(config).to.have.property('token', 'path_token');
             expect(config).to.have.property('url', 'path_url');
         });
 
@@ -104,7 +104,7 @@ describe('Config', () => {
                 stubConfig_({
                     path: './docpub.config',
                     config: {
-                        apiToken: 'random_token',
+                        token: 'random_token',
                         url: 'random_url'
                     }
                 });
@@ -117,7 +117,7 @@ describe('Config', () => {
                     path: './docpub.config',
                     config: {
                         username: 42,
-                        apiToken: 'random_token',
+                        token: 'random_token',
                         url: 'random_url'
                     }
                 });
@@ -125,7 +125,7 @@ describe('Config', () => {
                 expect(() => new Config('./docpub.config')).to.throw(/string/);
             });
 
-            it('should throw if `apiToken` is not provided in config', () => {
+            it('should throw if `token` is not provided in config', () => {
                 stubConfig_({
                     path: './docpub.config',
                     config: {
@@ -134,15 +134,15 @@ describe('Config', () => {
                     }
                 });
 
-                expect(() => new Config('./docpub.config')).to.throw(/apiToken/);
+                expect(() => new Config('./docpub.config')).to.throw(/token/);
             });
 
-            it('should throw if `apiToken` is not string', () => {
+            it('should throw if `token` is not string', () => {
                 stubConfig_({
                     path: './docpub.config',
                     config: {
                         username: 'random_username',
-                        apiToken: 123,
+                        token: 123,
                         url: 'random_url'
                     }
                 });
@@ -155,7 +155,7 @@ describe('Config', () => {
                     path: './docpub.config',
                     config: {
                         username: 'random_username',
-                        apiToken: 'random_token'
+                        token: 'random_token'
                     }
                 });
 
@@ -167,7 +167,7 @@ describe('Config', () => {
                     path: './docpub.config',
                     config: {
                         username: 'random_username',
-                        apiToken: 'random_token',
+                        token: 'random_token',
                         url: 123
                     }
                 });
@@ -196,7 +196,7 @@ describe('Config', () => {
                     path: './docpub.config',
                     config: {
                         username: 'config_username',
-                        apiToken: 'default_token',
+                        token: 'default_token',
                         url: 'default_url'
                     }
                 });
@@ -212,7 +212,7 @@ describe('Config', () => {
                     path: './docpub.config',
                     config: {
                         username: 'config_username',
-                        apiToken: 'default_token',
+                        token: 'default_token',
                         url: 'default_url'
                     }
                 });
@@ -222,14 +222,14 @@ describe('Config', () => {
                 expect(config.username).to.be.equal('env_username');
             });
 
-            it('should use argv option, if both cli and argv options available', () => {
+            it('should use argv option, if both env and argv options available', () => {
                 process.env['docpub_username'] = 'env_username';
                 process.argv = process.argv.concat('--username', 'argv_username');
                 stubConfig_({
                     path: './docpub.config',
                     config: {
                         username: 'config_username',
-                        apiToken: 'default_token',
+                        token: 'default_token',
                         url: 'default_url'
                     }
                 });
@@ -239,12 +239,12 @@ describe('Config', () => {
                 expect(config.username).to.be.equal('argv_username');
             });
 
-            it('should allow to not declare options in json config if argv option available', () => {
+            it('should allow options to not be declared in json config if argv option is available', () => {
                 process.argv = process.argv.concat('--username', 'argv_username');
                 stubConfig_({
                     path: './docpub.config',
                     config: {
-                        apiToken: 'default_token',
+                        token: 'default_token',
                         url: 'default_url'
                     }
                 });
@@ -254,12 +254,13 @@ describe('Config', () => {
                 expect(config.username).to.be.equal('argv_username');
             });
 
-            it('should allow to not declare options in json config if env option available', () => {
+            it('should allow options to not be declared in json config if env option is available', () => {
                 process.env['docpub_username'] = 'env_username';
                 stubConfig_({
                     path: './docpub.config',
                     config: {
-                        apiToken: 'default_token',
+                        username: undefined,
+                        token: 'default_token',
                         url: 'default_url'
                     }
                 });
@@ -277,7 +278,7 @@ function stubConfig_(opts) {
         path: 'docpub.conf',
         config: {
             username: 'default_username',
-            apiToken: 'default_token',
+            token: 'default_token',
             url: 'default_url'
         }
     });

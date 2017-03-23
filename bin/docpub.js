@@ -14,9 +14,9 @@ const Docpub = require('../lib/docpub');
 
 program
     .version(pkg.version)
-    .option('--doc-path <docPath>', 'path to documents directory (defaults to process directory)')
+    .option('-p, --path <path>', 'path to documents directory (defaults to process directory)')
     .option('--config-path <configPath>', 'path for the config')
-    .option('-v --verbose', 'verbose output');
+    .option('-v, --verbose', 'verbose output');
 
 program.on('--help', () => {
     console.log('  Overriding config');
