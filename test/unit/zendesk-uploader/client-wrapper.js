@@ -7,6 +7,7 @@ const logger = require('../../../lib/logger');
 
 describe('ZendeskClientWrapper', () => {
     const sandbox = sinon.sandbox.create();
+
     before(() => {
         this.zendeskStub = zendesk.createClient({
             username: 'username',
@@ -16,14 +17,20 @@ describe('ZendeskClientWrapper', () => {
             disableGlobalState: true
         });
     });
+
     beforeEach(() => {
         this.zendeskClient = new ZendeskClientWrapper(this.zendeskStub);
     });
+
     afterEach(() => {
         sandbox.restore();
     });
 
     describe('constructor', () => {
+        it('should throw if no client provided', () => {
+            expect(() => new ZendeskClientWrapper()).to.throw(/No ZenDesk client/);
+        });
+
         it('should wrap the methods of the client.article object', () => {
             const stub = sandbox.stub(this.zendeskStub.articles, 'create')
                 .yields(null, null, {});
@@ -419,14 +426,14 @@ describe('ZendeskClientWrapper', () => {
 });
 
 function createZendeskClient_(opts) {
-    return new ZendeskClientWrapper(
-        zendesk.createClient(
-            _.defaults(opts, {
-                username: 'username',
-                remoteUri: 'uri',
-                helpcenter: true,
-                disableGlobalState: true
-            })
-        )
-    );
+    opts = _.defaults(opts || {}, {
+        username: 'username',
+        remoteUri: 'uri',
+        helpcenter: true,
+        disableGlobalState: true
+    });
+
+    const nodeZendesk = zendesk.createClient(opts);
+
+    return new ZendeskClientWrapper(nodeZendesk);
 }

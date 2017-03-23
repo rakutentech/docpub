@@ -1,52 +1,90 @@
 const zendesk = require('node-zendesk');
-var proxyquire = require('proxyquire');
+const proxyquire = require('proxyquire');
+
+const createDummyConfig = require('./test-utils').createDummyConfig;
+
 let apiUtils;
 
 describe('api-utils', () => {
     const sandbox = sinon.sandbox.create();
+
     beforeEach(() => {
-        this.zendeskClient = sandbox.stub();
-        let ZendeskClientWrapper = sinon.stub();
         apiUtils = proxyquire('../../../lib/zendesk-uploader/api-utils', {
-            './client-wrapper': ZendeskClientWrapper
+            './client-wrapper': sandbox.stub()
         });
+
         sandbox.stub(zendesk, 'createClient');
-        process.env.ZENDESK_API_USERNAME = 'username';
-        process.env.ZENDESK_API_TOKEN = 'token';
-        process.env.ZENDESK_URL = 'url';
     });
+
     afterEach(() => {
-        delete process.env.ZENDESK_API_USERNAME;
-        delete process.env.ZENDESK_API_TOKEN;
-        delete process.env.ZENDESK_URL;
         sandbox.restore();
     });
+
     describe('getClient', () => {
+        it('should throw if config is missing', () => {
+            expect(() => apiUtils.getClient()).to.throw(/config/);
+        });
+
         it('should create an instance of the zendesk API client', () => {
-            apiUtils.getClient();
+            apiUtils.getClient(createDummyConfig());
+
             expect(zendesk.createClient).to.have.been.called;
         });
 
+        it('should pass client username', () => {
+            const config = createDummyConfig({
+                username: 'foo'
+            });
+
+            apiUtils.getClient(config);
+
+            expect(zendesk.createClient)
+                .to.be.calledWithMatch({username: 'foo'});
+        });
+
+        it('should pass client token', () => {
+            const config = createDummyConfig({token: 'foo'});
+
+            apiUtils.getClient(config);
+
+            expect(zendesk.createClient)
+                .to.be.calledWithMatch({token: 'foo'});
+        });
+
+        it('should pass client URL adding helpcenter endpoint path', () => {
+            const config = createDummyConfig({url: 'http://www.url.com'});
+
+            apiUtils.getClient(config);
+
+            expect(zendesk.createClient)
+                .to.be.calledWithMatch({remoteUri: 'http://www.url.com/api/v2/help_center'});
+        });
+
         it('should remove trailing slashes from the provided zendesk URI', () => {
-            process.env.ZENDESK_URL = 'http://www.url.com//';
-            apiUtils.getClient();
+            const config = createDummyConfig({url: 'http://www.url.com//'});
+
+            apiUtils.getClient(config);
+
             expect(zendesk.createClient)
                 .to.have.been.calledWithMatch({remoteUri: 'http://www.url.com/api/v2/help_center'});
         });
 
-        it('should throw an error if Zendesk Username is not defined', () => {
-            delete process.env.ZENDESK_API_USERNAME;
-            expect(() => apiUtils.getClient()).to.throw(/Username is undefined/);
+        it('should configure client to enable helpcenter', () => {
+            const config = createDummyConfig();
+
+            apiUtils.getClient(config);
+
+            expect(zendesk.createClient)
+                .to.be.calledWithMatch({helpcenter: true});
         });
 
-        it('should throw an error if Zendesk Token is not defined', () => {
-            delete process.env.ZENDESK_API_TOKEN;
-            expect(() => apiUtils.getClient()).to.throw(/Token is undefined/);
-        });
+        it('should configure client to run client as Library only - not scriptrunner', () => {
+            const config = createDummyConfig();
 
-        it('should throw an error if Zendesk API Url is not defined', () => {
-            delete process.env.ZENDESK_URL;
-            expect(() => apiUtils.getClient()).to.throw(/Url is undefined/);
+            apiUtils.getClient(config);
+
+            expect(zendesk.createClient)
+                .to.be.calledWithMatch({disableGlobalState: true});
         });
     });
 });

@@ -5,23 +5,28 @@ const testUtils = require('./test-utils');
 
 describe('SectionUploader', () => {
     const sandbox = sinon.sandbox.create();
+    let zendeskClient;
+
     beforeEach(() => {
-        this.zendeskClient = sandbox.stub();
-        this.zendeskClient.sections = {
-            create: sandbox.stub().resolves({id: 123456, position: 2}),
-            update: sandbox.stub().resolves()
+        zendeskClient = {
+            sections: {
+                create: sandbox.stub().resolves({id: 123456, position: 2}),
+                update: sandbox.stub().resolves()
+            },
+            translations: {
+                updateForSection: sandbox.stub().resolves({id: 54321})
+            },
+            accesspolicies: {
+                update: sandbox.stub().resolves()
+            }
         };
-        this.zendeskClient.translations = {
-            updateForSection: sandbox.stub().resolves({id: 54321})
-        };
-        this.zendeskClient.accesspolicies = {
-            update: sandbox.stub().resolves()
-        };
-        this.createArticleStub = sandbox.stub(ArticleUploader.prototype, 'create').resolves();
-        this.syncArticleStub = sandbox.stub(ArticleUploader.prototype, 'sync').resolves();
+
+        sandbox.stub(ArticleUploader.prototype, 'create').resolves();
+        sandbox.stub(ArticleUploader.prototype, 'sync').resolves();
 
         sandbox.stub(logger, 'info');
     });
+
     afterEach(() => {
         sandbox.restore();
     });
@@ -29,18 +34,18 @@ describe('SectionUploader', () => {
     describe('create', () => {
         it('should create a section if it doesnt exist', () => {
             const section = testUtils.createSection({isNew: true});
-            const uploader = new SectionUploader(section, this.zendeskClient);
+            const uploader = createUploader_(section);
 
             return uploader.create()
                 .then(() => {
-                    expect(this.zendeskClient.sections.create)
+                    expect(zendeskClient.sections.create)
                         .to.have.been.called;
                 });
         });
 
         it('should log create section action if section does not exist', () => {
-            const category = testUtils.createSection({isNew: true, path: 'category/path'});
-            const uploader = new SectionUploader(category, this.zendeskClient);
+            const section = testUtils.createSection({isNew: true, path: 'category/path'});
+            const uploader = createUploader_(section);
 
             return uploader.create()
                 .then(() => {
@@ -51,18 +56,18 @@ describe('SectionUploader', () => {
 
         it('should not create the section if it already exists', () => {
             const section = testUtils.createSection({isNew: false});
-            const uploader = new SectionUploader(section, this.zendeskClient);
+            const uploader = createUploader_(section);
 
             return uploader.create()
                 .then(() => {
-                    expect(this.zendeskClient.sections.create)
+                    expect(zendeskClient.sections.create)
                         .to.not.have.been.called;
                 });
         });
 
         it('should not log create section action if already exists', () => {
-            const category = testUtils.createSection({isNew: false});
-            const uploader = new SectionUploader(category, this.zendeskClient);
+            const section = testUtils.createSection({isNew: false});
+            const uploader = createUploader_(section);
 
             return uploader.create()
                 .then(() => {
@@ -72,14 +77,13 @@ describe('SectionUploader', () => {
         });
 
         it('should reject the promise when the create sections API returns an error', () => {
-            let error = {
-                error: 'error message'
-            };
-            this.zendeskClient.sections.create.rejects(error);
-            const uploader = new SectionUploader(testUtils.createSection({isNew: true}), this.zendeskClient);
+            const section = testUtils.createSection({isNew: true});
+            const uploader = createUploader_(section);
+            const error = new Error('error');
 
-            return expect(uploader.create())
-                .to.be.rejectedWith(error);
+            zendeskClient.sections.create.rejects(error);
+
+            return expect(uploader.create()).to.be.rejectedWith(error);
         });
 
         it('should set `locale` metadata to the request', () => {
@@ -87,11 +91,11 @@ describe('SectionUploader', () => {
                 isNew: true,
                 meta: {locale: 'test-locale'}
             });
-            const uploader = new SectionUploader(section, this.zendeskClient);
+            const uploader = createUploader_(section);
 
             return uploader.create()
                 .then(() => {
-                    expect(this.zendeskClient.sections.create)
+                    expect(zendeskClient.sections.create)
                         .to.have.been.calledWith(sinon.match.any, {
                             section: sinon.match({
                                 locale: 'test-locale'
@@ -102,8 +106,9 @@ describe('SectionUploader', () => {
 
         it('should update the sections zendeskId meta property', () => {
             const section = testUtils.createSection({isNew: true});
-            this.zendeskClient.sections.create.resolves({id: 123456, position: 42});
-            const uploader = new SectionUploader(section, this.zendeskClient);
+            const uploader = createUploader_(section);
+
+            zendeskClient.sections.create.resolves({id: 123456, position: 42});
 
             return uploader.create()
                 .then(() => {
@@ -114,8 +119,9 @@ describe('SectionUploader', () => {
 
         it('should write the metadata after it has been updated', () => {
             const section = testUtils.createSection({isNew: true});
-            this.zendeskClient.sections.create.resolves({id: 123456, position: 42});
-            const uploader = new SectionUploader(section, this.zendeskClient);
+            const uploader = createUploader_(section);
+
+            zendeskClient.sections.create.resolves({id: 123456, position: 42});
 
             return uploader.create()
                 .then(() => {
@@ -126,38 +132,39 @@ describe('SectionUploader', () => {
 
         it('should create each article passed in the `articles` array', () => {
             const section = testUtils.createSection();
+            const uploader = createUploader_(section);
+
             section.sections = [
                 testUtils.createArticle({section: section}),
                 testUtils.createArticle({section: section})
             ];
-            const uploader = new SectionUploader(section, this.zendeskClient);
 
             return uploader.create()
                 .then(() => {
-                    expect(this.createArticleStub)
+                    expect(ArticleUploader.prototype.create)
                         .to.have.been.calledTwice;
                 });
         });
 
         it('should not create any articles if no articles were provided', () => {
             const section = testUtils.createSection({articles: []});
-            const uploader = new SectionUploader(section, this.zendeskClient);
+            const uploader = createUploader_(section);
 
             return uploader.create()
                 .then(() => {
-                    expect(this.createArticleStub)
+                    expect(ArticleUploader.prototype.create)
                         .to.not.have.been.called;
                 });
         });
 
         it('should reject with an error if an article upload returns an error', () => {
             const section = testUtils.createSection({isNew: true});
-            const error = {error: 'error'};
-            this.createArticleStub.rejects(error);
-            const uploader = new SectionUploader(section, this.zendeskClient);
+            const uploader = createUploader_(section);
+            const error = new Error('error');
 
-            return expect(uploader.create())
-                .to.be.rejectedWith(error);
+            ArticleUploader.prototype.create.rejects(error);
+
+            return expect(uploader.create()).to.be.rejectedWith(error);
         });
     });
 
@@ -165,18 +172,18 @@ describe('SectionUploader', () => {
         describe('section update', () => {
             it('should update a section if it has been changed', () => {
                 const section = testUtils.createSection({isChanged: true});
-                const uploader = new SectionUploader(section, this.zendeskClient);
+                const uploader = createUploader_(section);
 
                 return uploader.sync()
                     .then(() => {
-                        expect(this.zendeskClient.sections.update)
+                        expect(zendeskClient.sections.update)
                             .to.have.been.called;
                     });
             });
 
             it('should log update section action if section has been changed', () => {
                 const section = testUtils.createSection({isChanged: true, path: 'section/path'});
-                const uploader = new SectionUploader(section, this.zendeskClient);
+                const uploader = createUploader_(section);
 
                 return uploader.sync()
                     .then(() => {
@@ -187,18 +194,18 @@ describe('SectionUploader', () => {
 
             it('should not update a section if it has not been changed', () => {
                 const section = testUtils.createSection({isChanged: false});
-                const uploader = new SectionUploader(section, this.zendeskClient);
+                const uploader = createUploader_(section);
 
                 return uploader.sync()
                     .then(() => {
-                        expect(this.zendeskClient.sections.update)
+                        expect(zendeskClient.sections.update)
                             .to.not.have.been.called;
                     });
             });
 
             it('should not log update section action if section has not been changed', () => {
                 const section = testUtils.createSection({isChanged: false});
-                const uploader = new SectionUploader(section, this.zendeskClient);
+                const uploader = createUploader_(section);
 
                 return uploader.sync()
                     .then(() => {
@@ -209,10 +216,10 @@ describe('SectionUploader', () => {
 
             it('should reject the promise when the update section update API returns an error', () => {
                 const section = testUtils.createSection({isChanged: true});
-                const error = {error: 'error message'};
-                const uploader = new SectionUploader(section, this.zendeskClient);
+                const uploader = createUploader_(section);
+                const error = new Error('error');
 
-                this.zendeskClient.sections.update.rejects(error);
+                zendeskClient.sections.update.rejects(error);
 
                 return expect(uploader.sync())
                     .to.be.rejectedWith(error);
@@ -223,11 +230,11 @@ describe('SectionUploader', () => {
                     isChanged: true,
                     meta: {zendeskId: 12345}
                 });
-                const uploader = new SectionUploader(section, this.zendeskClient);
+                const uploader = createUploader_(section);
 
                 return uploader.sync()
                     .then(() => {
-                        expect(this.zendeskClient.sections.update)
+                        expect(zendeskClient.sections.update)
                             .to.have.been.calledWithMatch(12345);
                     });
             });
@@ -237,11 +244,11 @@ describe('SectionUploader', () => {
                     isChanged: true,
                     meta: {position: 42}
                 });
-                const uploader = new SectionUploader(section, this.zendeskClient);
+                const uploader = createUploader_(section);
 
                 return uploader.sync()
                     .then(() => {
-                        expect(this.zendeskClient.sections.update)
+                        expect(zendeskClient.sections.update)
                             .to.have.been.calledWith(sinon.match.any, {
                                 section: sinon.match({
                                     position: 42
@@ -254,35 +261,34 @@ describe('SectionUploader', () => {
         describe('translations update', () => {
             it('should update the translation if a section has changed', () => {
                 const section = testUtils.createSection({isChanged: true});
-                const uploader = new SectionUploader(section, this.zendeskClient);
+                const uploader = createUploader_(section);
 
                 return uploader.sync()
                     .then(() => {
-                        expect(this.zendeskClient.translations.updateForSection)
+                        expect(zendeskClient.translations.updateForSection)
                             .to.have.been.called;
                     });
             });
 
             it('should not update the translation if a section has not changed', () => {
                 const section = testUtils.createSection({isChanged: false});
-                const uploader = new SectionUploader(section, this.zendeskClient);
+                const uploader = createUploader_(section);
 
                 return uploader.sync()
                     .then(() => {
-                        expect(this.zendeskClient.translations.updateForSection)
+                        expect(zendeskClient.translations.updateForSection)
                             .to.not.have.been.called;
                     });
             });
 
             it('should reject the promise when the translations API returns an error', () => {
                 const section = testUtils.createSection({isChanged: true});
-                const error = {error: 'error message'};
-                const uploader = new SectionUploader(section, this.zendeskClient);
+                const uploader = createUploader_(section);
+                const error = new Error('error');
 
-                this.zendeskClient.translations.updateForSection.rejects(error);
+                zendeskClient.translations.updateForSection.rejects(error);
 
-                return expect(uploader.sync())
-                    .to.be.rejectedWith(error);
+                return expect(uploader.sync()).to.be.rejectedWith(error);
             });
 
             it('should update the translation for the correct zendeskId', () => {
@@ -290,11 +296,11 @@ describe('SectionUploader', () => {
                     isChanged: true,
                     meta: {zendeskId: 12345}
                 });
-                const uploader = new SectionUploader(section, this.zendeskClient);
+                const uploader = createUploader_(section);
 
                 return uploader.sync()
                     .then(() => {
-                        expect(this.zendeskClient.translations.updateForSection)
+                        expect(zendeskClient.translations.updateForSection)
                             .to.have.been.calledWithMatch(12345);
                     });
             });
@@ -304,11 +310,11 @@ describe('SectionUploader', () => {
                     isChanged: true,
                     meta: {locale: 'test-locale'}
                 });
-                const uploader = new SectionUploader(section, this.zendeskClient);
+                const uploader = createUploader_(section);
 
                 return uploader.sync()
                     .then(() => {
-                        expect(this.zendeskClient.translations.updateForSection)
+                        expect(zendeskClient.translations.updateForSection)
                             .to.have.been.calledWithMatch(sinon.match.any, 'test-locale');
                     });
             });
@@ -318,11 +324,11 @@ describe('SectionUploader', () => {
                     isChanged: true,
                     meta: {locale: 'test-locale'}
                 });
-                const uploader = new SectionUploader(section, this.zendeskClient);
+                const uploader = createUploader_(section);
 
                 return uploader.sync()
                     .then(() => {
-                        expect(this.zendeskClient.translations.updateForSection)
+                        expect(zendeskClient.translations.updateForSection)
                             .to.have.been.calledWithMatch(sinon.match.any, sinon.match.any, {
                                 translation: sinon.match({
                                     locale: 'test-locale'
@@ -336,11 +342,11 @@ describe('SectionUploader', () => {
                     isChanged: true,
                     meta: {description: 'Description goes here'}
                 });
-                const uploader = new SectionUploader(section, this.zendeskClient);
+                const uploader = createUploader_(section);
 
                 return uploader.sync()
                     .then(() => {
-                        expect(this.zendeskClient.translations.updateForSection)
+                        expect(zendeskClient.translations.updateForSection)
                             .to.have.been.calledWithMatch(sinon.match.any, sinon.match.any, {
                                 translation: sinon.match({
                                     body: 'Description goes here'
@@ -360,11 +366,11 @@ describe('SectionUploader', () => {
                         manageableBy: 'everyone'
                     }
                 });
-                const uploader = new SectionUploader(section, this.zendeskClient);
+                const uploader = createUploader_(section);
 
                 return uploader.sync()
                     .then(() => {
-                        expect(this.zendeskClient.accesspolicies.update)
+                        expect(zendeskClient.accesspolicies.update)
                             .to.have.been.calledWith(12345, sinon.match.any);
                     });
             });
@@ -377,12 +383,12 @@ describe('SectionUploader', () => {
                         manageableBy: 'everyone'
                     }
                 });
-                const error = {error: 'error'};
-                this.zendeskClient.accesspolicies.update.rejects(error);
-                const uploader = new SectionUploader(section, this.zendeskClient);
+                const uploader = createUploader_(section);
+                const error = new Error('error');
 
-                return expect(uploader.sync())
-                            .to.be.rejectedWith(error);
+                zendeskClient.accesspolicies.update.rejects(error);
+
+                return expect(uploader.sync()).to.be.rejectedWith(error);
             });
 
             it('should set the `viewable_by` property to the request', () => {
@@ -392,11 +398,11 @@ describe('SectionUploader', () => {
                         viewableBy: 'staff'
                     }
                 });
-                const uploader = new SectionUploader(section, this.zendeskClient);
+                const uploader = createUploader_(section);
 
                 return uploader.sync()
                     .then(() => {
-                        expect(this.zendeskClient.accesspolicies.update)
+                        expect(zendeskClient.accesspolicies.update)
                             .to.have.been.calledWithMatch(sinon.match.any, {
                                 'access_policy': sinon.match({
                                     'viewable_by': 'staff'
@@ -412,11 +418,11 @@ describe('SectionUploader', () => {
                         manageableBy: 'everyone'
                     }
                 });
-                const uploader = new SectionUploader(section, this.zendeskClient);
+                const uploader = createUploader_(section);
 
                 return uploader.sync()
                     .then(() => {
-                        expect(this.zendeskClient.accesspolicies.update)
+                        expect(zendeskClient.accesspolicies.update)
                             .to.have.been.calledWithMatch(sinon.match.any, {
                                 'access_policy': sinon.match({
                                     'manageable_by': 'everyone'
@@ -429,7 +435,7 @@ describe('SectionUploader', () => {
         describe('hash', () => {
             it('should update section hash after updating section if section was changed', () => {
                 const section = testUtils.createSection({isChanged: true});
-                const uploader = new SectionUploader(section, this.zendeskClient);
+                const uploader = createUploader_(section);
 
                 return uploader.sync()
                     .then(() => {
@@ -439,7 +445,7 @@ describe('SectionUploader', () => {
 
             it('should reject if failed to update section hash', () => {
                 const section = testUtils.createSection({isChanged: true});
-                const uploader = new SectionUploader(section, this.zendeskClient);
+                const uploader = createUploader_(section);
                 const error = new Error('error');
 
                 section.updateHash.rejects(error);
@@ -450,7 +456,7 @@ describe('SectionUploader', () => {
 
             it('should not update section hash if section has not been changed', () => {
                 const section = testUtils.createSection({isChanged: false});
-                const uploader = new SectionUploader(section, this.zendeskClient);
+                const uploader = createUploader_(section);
 
                 return uploader.sync()
                     .then(() => {
@@ -462,39 +468,46 @@ describe('SectionUploader', () => {
         describe('article sync', () => {
             it('should sync each article passed in the `articles` array', () => {
                 const section = testUtils.createSection();
+                const uploader = createUploader_(section);
+
                 section.sections = [
                     testUtils.createArticle({section: section}),
                     testUtils.createArticle({section: section})
                 ];
-                const uploader = new SectionUploader(section, this.zendeskClient);
 
                 return uploader.sync()
                     .then(() => {
-                        expect(this.syncArticleStub)
+                        expect(ArticleUploader.prototype.sync)
                             .to.have.been.calledTwice;
                     });
             });
 
             it('should not sync any articles if no articles were provided', () => {
                 const section = testUtils.createSection({articles: []});
-                const uploader = new SectionUploader(section, this.zendeskClient);
+                const uploader = createUploader_(section);
 
                 return uploader.sync()
                     .then(() => {
-                        expect(this.syncArticleStub)
+                        expect(ArticleUploader.prototype.sync)
                             .to.not.have.been.called;
                     });
             });
 
             it('should reject with an error if an article sync returns an error', () => {
                 const section = testUtils.createSection();
-                const error = {error: 'error'};
-                this.syncArticleStub.rejects(error);
-                const uploader = new SectionUploader(section, this.zendeskClient);
+                const uploader = createUploader_(section);
+                const error = new Error('error');
 
-                return expect(uploader.sync())
-                    .to.be.rejectedWith(error);
+                ArticleUploader.prototype.sync.rejects(error);
+
+                return expect(uploader.sync()).to.be.rejectedWith(error);
             });
         });
     });
+
+    function createUploader_(category) {
+        const config = testUtils.createDummyConfig();
+
+        return new SectionUploader(category, config, zendeskClient);
+    }
 });

@@ -67,7 +67,8 @@ function createCategory(opts) {
         },
         isChanged: true,
         isNew: false,
-        updateHash: sinon.stub().resolves()
+        updateHash: sinon.stub().resolves(),
+        flatTree: sinon.stub().returns([])
     });
     category.sections = [].concat(opts.sections || [
         createSection({category: category}),
@@ -93,7 +94,16 @@ function createResource(opts) {
     return resource;
 }
 
+function createDummyConfig(params) {
+    return _.defaults(params || {}, {
+        username: 'default_username',
+        token: 'default_token',
+        url: 'default_url'
+    });
+}
+
 exports.createArticle = createArticle;
 exports.createSection = createSection;
 exports.createCategory = createCategory;
 exports.createResource = createResource;
+exports.createDummyConfig = createDummyConfig;

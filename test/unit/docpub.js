@@ -1,20 +1,23 @@
 const proxyquire = require('proxyquire');
 const path = require('path');
 const logger = require('../../lib/logger');
-let DocpubPipeline;
+let Docpub;
 let Category;
 let CategoryUploader;
 let ZendeskDeleter;
+let Config;
 
-describe('DocpubPipeline', () => {
+describe('Docpub', () => {
     const sandbox = sinon.sandbox.create();
 
     beforeEach(() => {
+        Config = sandbox.stub();
         Category = sandbox.stub();
         CategoryUploader = sandbox.stub();
         ZendeskDeleter = sandbox.stub();
-        DocpubPipeline = proxyquire('../../lib/docpub', {
+        Docpub = proxyquire('../../lib/docpub', {
             './logger': logger,
+            './config': Config,
             './category': Category,
             './zendesk-uploader/category-uploader': CategoryUploader,
             './zendesk-uploader/deleter': ZendeskDeleter
@@ -33,11 +36,11 @@ describe('DocpubPipeline', () => {
 
     describe('constructor', () => {
         it('should not throw if opts were not passed', () => {
-            expect(() => new DocpubPipeline()).to.not.throw;
+            expect(() => new Docpub()).to.not.throw;
         });
 
         it('should use path passed in params if it was passed', () => {
-            const pipeline = new DocpubPipeline({path: 'foo'});
+            const pipeline = new Docpub({path: 'foo'});
 
             return pipeline.uploadCategory()
                 .then(() => {
@@ -47,7 +50,7 @@ describe('DocpubPipeline', () => {
         });
 
         it('should use `process.cwd()` as path to repo if it was not passed in params', () => {
-            const pipeline = new DocpubPipeline();
+            const pipeline = new Docpub();
 
             return pipeline.uploadCategory()
                 .then(() => {
@@ -57,39 +60,49 @@ describe('DocpubPipeline', () => {
         });
 
         it('should resolve path received in parameters', () => {
-            const pipeline = new DocpubPipeline({path: '../foo/bar'});
+            const pipeline = new Docpub({path: '../bar/foo'});
 
             return pipeline.uploadCategory()
                 .then(() => {
                     expect(Category)
-                        .to.be.calledWith(path.resolve(process.cwd(), '../foo/bar'));
+                        .to.be.calledWith(path.resolve(process.cwd(), '../bar/foo'));
                 });
         });
 
         it('should setup logger', () => {
             /*eslint-disable no-new*/
-            new DocpubPipeline({verbose: true});
+            new Docpub({verbose: true});
             /*eslint-enable no-new*/
 
             expect(logger.setup).to.be.calledWithMatch({verbose: true});
         });
+
+        it('should create config passing config path and doc path to it', () => {
+            /*eslint-disable no-new*/
+            new Docpub({
+                path: 'path/to/doc/dir',
+                configPath: 'path/to/config.file'
+            });
+            /*eslint-enable no-new*/
+
+            expect(Config).to.be.calledWith(
+                'path/to/config.file',
+                path.resolve('path/to/doc/dir')
+            );
+        });
+
+        it('should throw if failed to create config', () => {
+            const error = new Error('error');
+
+            Config.throws(error);
+
+            expect(() => new Docpub({path: 'foo/bar'})).to.throw(error);
+        });
     });
 
     describe('uploadCategory', () => {
-        before(() => {
-            process.env.ZENDESK_API_USERNAME = 'username';
-            process.env.ZENDESK_API_TOKEN = 'token';
-            process.env.ZENDESK_URL = 'url';
-        });
-
-        after(() => {
-            delete process.env.ZENDESK_API_USERNAME;
-            delete process.env.ZENDESK_API_TOKEN;
-            delete process.env.ZENDESK_URL;
-        });
-
         it('should log upload process start', () => {
-            const pipeline = new DocpubPipeline({path: 'category/path'});
+            const pipeline = new Docpub({path: 'category/path'});
 
             return pipeline.uploadCategory()
                 .then(() => {
@@ -99,7 +112,7 @@ describe('DocpubPipeline', () => {
         });
 
         it('should read project directory', () => {
-            const pipeline = new DocpubPipeline();
+            const pipeline = new Docpub();
 
             return pipeline.uploadCategory()
                 .then(() => {
@@ -110,14 +123,14 @@ describe('DocpubPipeline', () => {
         it('should reject if failed to read project directory', () => {
             Category.prototype.read.rejects(new Error('error'));
 
-            const pipeline = new DocpubPipeline();
+            const pipeline = new Docpub();
 
             return expect(pipeline.uploadCategory())
                 .to.be.rejectedWith(/error/);
         });
 
         it('should upload category', () => {
-            const pipeline = new DocpubPipeline();
+            const pipeline = new Docpub();
 
             return pipeline.uploadCategory()
                 .then(() => {
@@ -129,7 +142,7 @@ describe('DocpubPipeline', () => {
         it('should pass category for uploading to CategoryUploader', () => {
             Category.returns(Category);
 
-            const pipeline = new DocpubPipeline();
+            const pipeline = new Docpub();
 
             return pipeline.uploadCategory()
                 .then(() => {
@@ -137,8 +150,20 @@ describe('DocpubPipeline', () => {
                 });
         });
 
+        it('should pass config for category uploader', () => {
+            const pipeline = new Docpub();
+
+            return pipeline.uploadCategory()
+                .then(() => {
+                    expect(CategoryUploader).to.be.calledWithMatch(
+                        sinon.match.any,
+                        sinon.match(new Config)
+                    );
+                });
+        });
+
         it('should log uploading success if all was uploaded correctly', () => {
-            const pipeline = new DocpubPipeline();
+            const pipeline = new Docpub();
 
             return pipeline.uploadCategory()
                 .then(() => {
@@ -148,7 +173,7 @@ describe('DocpubPipeline', () => {
         });
 
         it('should reject if category uploading failed with error', () => {
-            const pipeline = new DocpubPipeline();
+            const pipeline = new Docpub();
             const error = new Error('error');
 
             CategoryUploader.prototype.upload.rejects(error);
@@ -160,7 +185,7 @@ describe('DocpubPipeline', () => {
         it('should log error if category uploading finished with error', () => {
             CategoryUploader.prototype.upload.rejects(new Error('error'));
 
-            const pipeline = new DocpubPipeline();
+            const pipeline = new Docpub();
 
             return expect(pipeline.uploadCategory()).to.be.rejectedWith()
                 .then(() => {
@@ -169,7 +194,7 @@ describe('DocpubPipeline', () => {
         });
 
         it('should delete documents on zendesk that dont exist locally', () => {
-            const pipeline = new DocpubPipeline();
+            const pipeline = new Docpub();
 
             return pipeline.uploadCategory()
                 .then(() => {
@@ -179,7 +204,7 @@ describe('DocpubPipeline', () => {
         });
 
         it('should call delete after upload', () => {
-            const pipeline = new DocpubPipeline();
+            const pipeline = new Docpub();
 
             CategoryUploader.prototype.upload.returns(
                 new Promise(resolve => {
@@ -197,7 +222,7 @@ describe('DocpubPipeline', () => {
         });
 
         it('should reject if deleter returns an error', () => {
-            const pipeline = new DocpubPipeline();
+            const pipeline = new Docpub();
             const error = new Error('error');
 
             ZendeskDeleter.prototype.delete.rejects(error);
