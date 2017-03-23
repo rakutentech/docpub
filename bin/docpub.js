@@ -39,7 +39,13 @@ program.on('--help', () => {
 
 program.parse(process.argv);
 
-const docpub = new Docpub(program);
+let docpub;
+
+try {
+    docpub = new Docpub(program);
+} catch (e) {
+    process.exit(1); // in case docpub failed to construct interface instance, unable to continue
+}
 
 docpub
     .uploadCategory()

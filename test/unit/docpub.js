@@ -90,6 +90,14 @@ describe('Docpub', () => {
                 path.resolve('path/to/doc/dir')
             );
         });
+
+        it('should throw if failed to create config', () => {
+            const error = new Error('error');
+
+            Config.throws(error);
+
+            expect(() => new Docpub({path: 'foo/bar'})).to.throw(error);
+        });
     });
 
     describe('uploadCategory', () => {
