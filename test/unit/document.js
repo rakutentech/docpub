@@ -141,12 +141,13 @@ describe('Document', () => {
 
         it('should reject if error happened on meta write', () => {
             const document = new Document('path');
+            const error = new Error('error');
 
             document.meta = buildMeta_();
-            document.meta.write.rejects('Error');
+            document.meta.write.rejects(error);
 
             return expect(document.updateHash())
-                .to.be.rejectedWith('Error');
+                .to.be.rejectedWith(error);
         });
 
         function buildMeta_(hash) {

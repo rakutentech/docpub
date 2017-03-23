@@ -176,11 +176,12 @@ describe('ResourceMetadata', () => {
         it('should reject if failed to write article meta', () => {
             const articleMeta = createArticleMeta_('resource_path');
             const meta = new ResourceMetadata('resource_path', articleMeta);
+            const error = new Error('Failure');
 
-            articleMeta.write.rejects('Failure');
+            articleMeta.write.rejects(error);
 
             return expect(meta.write())
-                .to.be.rejectedWith('Failure');
+                .to.be.rejectedWith(error);
         });
     });
 });

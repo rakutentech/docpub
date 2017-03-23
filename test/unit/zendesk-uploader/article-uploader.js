@@ -578,11 +578,12 @@ describe('ArticleUploader', () => {
             it('should reject if failed to update article hash', () => {
                 const article = testUtils.createArticle({isChanged: true});
                 const uploader = new ArticleUploader(article, this.zendeskClient);
+                const error = new Error('error');
 
-                article.updateHash.rejects('Error');
+                article.updateHash.rejects(error);
 
                 return expect(uploader.sync())
-                    .to.be.rejectedWith('Error');
+                    .to.be.rejectedWith(error);
             });
 
 

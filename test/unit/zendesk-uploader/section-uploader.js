@@ -440,11 +440,12 @@ describe('SectionUploader', () => {
             it('should reject if failed to update section hash', () => {
                 const section = testUtils.createSection({isChanged: true});
                 const uploader = new SectionUploader(section, this.zendeskClient);
+                const error = new Error('error');
 
-                section.updateHash.rejects('Error');
+                section.updateHash.rejects(error);
 
                 return expect(uploader.sync())
-                    .to.be.rejectedWith('Error');
+                    .to.be.rejectedWith(error);
             });
 
             it('should not update section hash if section has not been changed', () => {

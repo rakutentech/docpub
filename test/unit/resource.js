@@ -92,12 +92,13 @@ describe('Resource', () => {
 
     describe('read', () => {
         it('should reject if error on resource reading happened', () => {
-            sandbox.stub(fs, 'readFile').rejects('Error');
-
             const resource = createResource_('path');
+            const error = new Error('error');
+
+            sandbox.stub(fs, 'readFile').rejects(error);
 
             return expect(resource.read())
-                .to.be.rejectedWith('Error');
+                .to.be.rejectedWith(error);
         });
 
         it('should calculate hash of resource contents', () => {

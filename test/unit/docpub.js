@@ -148,12 +148,13 @@ describe('DocpubPipeline', () => {
         });
 
         it('should reject if category uploading failed with error', () => {
-            CategoryUploader.prototype.upload.rejects(new Error('error'));
-
             const pipeline = new DocpubPipeline();
+            const error = new Error('error');
+
+            CategoryUploader.prototype.upload.rejects(error);
 
             return expect(pipeline.uploadCategory())
-                .to.be.rejectedWith(/error/);
+                .to.be.rejectedWith(error);
         });
 
         it('should log error if category uploading finished with error', () => {
@@ -197,10 +198,12 @@ describe('DocpubPipeline', () => {
 
         it('should reject if deleter returns an error', () => {
             const pipeline = new DocpubPipeline();
-            ZendeskDeleter.prototype.delete.rejects('error');
+            const error = new Error('error');
+
+            ZendeskDeleter.prototype.delete.rejects(error);
 
             return expect(pipeline.uploadCategory())
-                .to.be.rejectedWith('error');
+                .to.be.rejectedWith(error);
         });
     });
 });
