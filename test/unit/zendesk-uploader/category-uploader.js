@@ -107,11 +107,12 @@ describe('CategoryUploader', () => {
         it('should reject the promise when the create category API returns an error', () => {
             const category = testUtils.createCategory({isNew: true});
             const uploader = createUploader_(category);
+            const error = new Error('error');
 
-            zendeskClient.categories.create.rejects('error');
+            zendeskClient.categories.create.rejects(error);
 
             return expect(uploader.create())
-                .to.be.rejectedWith('error');
+                .to.be.rejectedWith(error);
         });
 
         it('should set `locale` metadata to the request', () => {
@@ -188,10 +189,11 @@ describe('CategoryUploader', () => {
         it('should reject with an error if a section creation returns an error', () => {
             const category = testUtils.createCategory({isNew: true});
             const uploader = createUploader_(category);
+            const error = new Error('error');
 
-            SectionUploader.prototype.create.rejects('error');
+            SectionUploader.prototype.create.rejects(error);
 
-            return expect(uploader.create()).to.be.rejectedWith('error');
+            return expect(uploader.create()).to.be.rejectedWith(error);
         });
     });
 
@@ -258,10 +260,11 @@ describe('CategoryUploader', () => {
             it('should reject the promise when the update category API returns an error', () => {
                 const category = testUtils.createCategory({isChanged: true});
                 const uploader = createUploader_(category);
+                const error = new Error('error');
 
-                zendeskClient.categories.update.rejects('error');
+                zendeskClient.categories.update.rejects(error);
 
-                return expect(uploader.sync()).to.be.rejectedWith('error');
+                return expect(uploader.sync()).to.be.rejectedWith(error);
             });
 
             it('should set the category `position` to the request if one is provided', () => {
@@ -323,11 +326,12 @@ describe('CategoryUploader', () => {
             it('should reject the promise when the translation API returns an error', () => {
                 const category = testUtils.createCategory({isChanged: true});
                 const uploader = createUploader_(category);
+                const error = new Error('error');
 
-                zendeskClient.translations.updateForCategory.rejects('error');
+                zendeskClient.translations.updateForCategory.rejects(error);
 
                 return expect(uploader.sync())
-                    .to.be.rejectedWith('error');
+                    .to.be.rejectedWith(error);
             });
 
             it('should update the translation for the correct locale', () => {

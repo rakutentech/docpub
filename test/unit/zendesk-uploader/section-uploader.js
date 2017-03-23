@@ -79,10 +79,11 @@ describe('SectionUploader', () => {
         it('should reject the promise when the create sections API returns an error', () => {
             const section = testUtils.createSection({isNew: true});
             const uploader = createUploader_(section);
+            const error = new Error('error');
 
-            zendeskClient.sections.create.rejects('error');
+            zendeskClient.sections.create.rejects(error);
 
-            return expect(uploader.create()).to.be.rejectedWith('error');
+            return expect(uploader.create()).to.be.rejectedWith(error);
         });
 
         it('should set `locale` metadata to the request', () => {
@@ -159,10 +160,11 @@ describe('SectionUploader', () => {
         it('should reject with an error if an article upload returns an error', () => {
             const section = testUtils.createSection({isNew: true});
             const uploader = createUploader_(section);
+            const error = new Error('error');
 
-            ArticleUploader.prototype.create.rejects('error');
+            ArticleUploader.prototype.create.rejects(error);
 
-            return expect(uploader.create()).to.be.rejectedWith('error');
+            return expect(uploader.create()).to.be.rejectedWith(error);
         });
     });
 
@@ -215,11 +217,12 @@ describe('SectionUploader', () => {
             it('should reject the promise when the update section update API returns an error', () => {
                 const section = testUtils.createSection({isChanged: true});
                 const uploader = createUploader_(section);
+                const error = new Error('error');
 
-                zendeskClient.sections.update.rejects('error');
+                zendeskClient.sections.update.rejects(error);
 
                 return expect(uploader.sync())
-                    .to.be.rejectedWith('error');
+                    .to.be.rejectedWith(error);
             });
 
             it('should update the correct section zendeskId', () => {
@@ -281,10 +284,11 @@ describe('SectionUploader', () => {
             it('should reject the promise when the translations API returns an error', () => {
                 const section = testUtils.createSection({isChanged: true});
                 const uploader = createUploader_(section);
+                const error = new Error('error');
 
-                zendeskClient.translations.updateForSection.rejects('error');
+                zendeskClient.translations.updateForSection.rejects(error);
 
-                return expect(uploader.sync()).to.be.rejectedWith('error');
+                return expect(uploader.sync()).to.be.rejectedWith(error);
             });
 
             it('should update the translation for the correct zendeskId', () => {
@@ -380,10 +384,11 @@ describe('SectionUploader', () => {
                     }
                 });
                 const uploader = createUploader_(section);
+                const error = new Error('error');
 
-                zendeskClient.accesspolicies.update.rejects('error');
+                zendeskClient.accesspolicies.update.rejects(error);
 
-                return expect(uploader.sync()).to.be.rejectedWith('error');
+                return expect(uploader.sync()).to.be.rejectedWith(error);
             });
 
             it('should set the `viewable_by` property to the request', () => {
@@ -491,10 +496,11 @@ describe('SectionUploader', () => {
             it('should reject with an error if an article sync returns an error', () => {
                 const section = testUtils.createSection();
                 const uploader = createUploader_(section);
+                const error = new Error('error');
 
-                ArticleUploader.prototype.sync.rejects('error');
+                ArticleUploader.prototype.sync.rejects(error);
 
-                return expect(uploader.sync()).to.be.rejectedWith('error');
+                return expect(uploader.sync()).to.be.rejectedWith(error);
             });
         });
     });

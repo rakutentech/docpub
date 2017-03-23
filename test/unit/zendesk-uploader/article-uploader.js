@@ -70,11 +70,12 @@ describe('ArticleUploader', () => {
         it('should reject the promise with an error when the api returns an error', () => {
             const article = testUtils.createArticle({isNew: true});
             const uploader = createUploader_(article);
+            const error = new Error('error');
 
-            zendeskClient.articles.create.rejects('error');
+            zendeskClient.articles.create.rejects(error);
 
             return expect(uploader.create())
-                .to.be.rejectedWith('error');
+                .to.be.rejectedWith(error);
         });
 
         it('should set `locale` metadata to the request', () => {
@@ -389,11 +390,12 @@ describe('ArticleUploader', () => {
             it('should reject the promise when the article update API returns an error', () => {
                 const article = testUtils.createArticle({isChanged: true});
                 const uploader = createUploader_(article);
+                const error = new Error('error');
 
-                zendeskClient.articles.update.rejects('error');
+                zendeskClient.articles.update.rejects(error);
 
                 return expect(uploader.sync())
-                    .to.be.rejectedWith('error');
+                    .to.be.rejectedWith(error);
             });
 
             it('should set the article `position` to the request if one is provided', () => {
@@ -495,11 +497,12 @@ describe('ArticleUploader', () => {
             it('should reject the promise when the translations API returns an error', () => {
                 const article = testUtils.createArticle({isChanged: true});
                 const uploader = createUploader_(article);
+                const error = new Error('error');
 
-                zendeskClient.translations.updateForArticle.rejects('error');
+                zendeskClient.translations.updateForArticle.rejects(error);
 
                 return expect(uploader.sync())
-                    .to.be.rejectedWith('error');
+                    .to.be.rejectedWith(error);
             });
 
             it('should update the translation for the correct locale', () => {

@@ -51,11 +51,12 @@ describe('Deleter', () => {
         it('should reject with an error when the API returns an error', () => {
             const category = testUtils.createCategory();
             const deleter = createDeleter_(category);
+            const error = new Error('error');
 
             zendeskClient.articles.listByCategory.resolves([{id: 123456}]);
-            zendeskClient.articles.delete.rejects('error');
+            zendeskClient.articles.delete.rejects(error);
 
-            return expect(deleter.delete()).to.be.rejectedWith('error');
+            return expect(deleter.delete()).to.be.rejectedWith(error);
         });
 
         it('should log delete action', () => {
