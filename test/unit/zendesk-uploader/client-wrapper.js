@@ -146,13 +146,48 @@ describe('ZendeskClientWrapper', () => {
             });
         });
 
-        it('should reject the promise if the request fails after 5 retries', () => {
+        it('should retry after twice as long as the last retry for the request when there are subsequent 500 errors', () => {
+            const stub = sandbox.stub(this.zendeskStub.articles, 'create').yields({statusCode: 503});
+            stub.onCall(2).yields(null, null, {});
+
+            let clock = sandbox.useFakeTimers();
+            let createArticle = this.zendeskClient.articles.create(123, {});
+
+            clock.tick(500);
+            expect(stub).to.be.calledTwice;
+
+            clock.tick(500);
+            expect(stub).to.be.calledTwice;
+
+            clock.tick(500);
+            return createArticle.then(() => {
+                expect(stub).to.be.calledThrice;
+            });
+        });
+
+        it('should not wait longer than 8000ms on subsequent retries due to 500 errors', () => {
+            const stub = sandbox.stub(this.zendeskStub.articles, 'create').yields({statusCode: 503});
+            stub.onCall(6).yields(null, null, {});
+
+            let clock = sandbox.useFakeTimers();
+            let createArticle = this.zendeskClient.articles.create(123, {});
+
+            clock.tick(500 + 1000 + 2000 + 4000 + 8000);
+            expect(stub.callCount).to.be.equal(6);
+
+            clock.tick(8000);
+            return createArticle.then(() => {
+                expect(stub.callCount).to.be.equal(7);
+            });
+        });
+
+        it('should reject the promise if the request fails after 6 retries', () => {
             const stub = sandbox.stub(this.zendeskStub.articles, 'create')
                 .yields({retryAfter: 0.01});
 
             return expect(this.zendeskClient.articles.create(123, {test: 'test'}))
                 .to.be.rejected.then(() => {
-                    expect(stub.callCount).to.be.equal(6);
+                    expect(stub.callCount).to.be.equal(7);
                 });
         });
 
@@ -166,6 +201,17 @@ describe('ZendeskClientWrapper', () => {
                     expect(logger.warn)
                         .to.have.been.calledWithMatch(/10 milliseconds/);
                 });
+        });
+
+        it('should not allow more than 29 concurrent connections', () => {
+            let connections = 0;
+            sandbox.stub(this.zendeskStub.articles, 'create', () => connections++);
+
+            for (let i = 0; i < 30; i++) {
+                this.zendeskClient.articles.create(123, {test: 'test'});
+            }
+
+            expect(connections).to.be.equal(29);
         });
     });
 
