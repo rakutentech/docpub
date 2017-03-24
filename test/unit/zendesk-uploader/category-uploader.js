@@ -1,7 +1,7 @@
 const CategoryUploader = require('../../../lib/zendesk-uploader/category-uploader');
 const SectionUploader = require('../../../lib/zendesk-uploader/section-uploader');
 const logger = require('../../../lib/logger');
-const testUtils = require('./test-utils');
+const testUtils = require('../test-utils');
 
 describe('CategoryUploader', () => {
     const sandbox = sinon.sandbox.create();
@@ -29,7 +29,7 @@ describe('CategoryUploader', () => {
 
     describe('upload', () => {
         it('should create a category', () => {
-            const category = testUtils.createCategory();
+            const category = testUtils.createDummyCategory();
             const uploader = createUploader_(category);
 
             sandbox.stub(uploader, 'create').resolves();
@@ -43,7 +43,7 @@ describe('CategoryUploader', () => {
         });
 
         it('should sync a category', () => {
-            const category = testUtils.createCategory();
+            const category = testUtils.createDummyCategory();
             const uploader = createUploader_(category);
 
             sandbox.stub(uploader, 'create').resolves();
@@ -59,7 +59,7 @@ describe('CategoryUploader', () => {
 
     describe('create', () => {
         it('should create a category if it does not exist', () => {
-            const category = testUtils.createCategory({isNew: true});
+            const category = testUtils.createDummyCategory({isNew: true});
             const uploader = createUploader_(category);
 
             return uploader.create()
@@ -70,7 +70,7 @@ describe('CategoryUploader', () => {
         });
 
         it('should log create category action if category does not exist', () => {
-            const category = testUtils.createCategory({isNew: true, path: 'category/path'});
+            const category = testUtils.createDummyCategory({isNew: true, path: 'category/path'});
             const uploader = createUploader_(category);
 
             return uploader.create()
@@ -81,7 +81,7 @@ describe('CategoryUploader', () => {
         });
 
         it('should not create the category if it already exists', () => {
-            const category = testUtils.createCategory({
+            const category = testUtils.createDummyCategory({
                 isNew: false
             });
             const uploader = createUploader_(category);
@@ -94,7 +94,7 @@ describe('CategoryUploader', () => {
         });
 
         it('should not log create category action if category is not new', () => {
-            const category = testUtils.createCategory({isNew: false});
+            const category = testUtils.createDummyCategory({isNew: false});
             const uploader = createUploader_(category);
 
             return uploader.create()
@@ -105,7 +105,7 @@ describe('CategoryUploader', () => {
         });
 
         it('should reject the promise when the create category API returns an error', () => {
-            const category = testUtils.createCategory({isNew: true});
+            const category = testUtils.createDummyCategory({isNew: true});
             const uploader = createUploader_(category);
             const error = new Error('error');
 
@@ -116,7 +116,7 @@ describe('CategoryUploader', () => {
         });
 
         it('should set `locale` metadata to the request', () => {
-            const category = testUtils.createCategory({
+            const category = testUtils.createDummyCategory({
                 isNew: true,
                 meta: {locale: 'test-locale'}
             });
@@ -134,7 +134,7 @@ describe('CategoryUploader', () => {
         });
 
         it('should update the categorys zendeskId meta property', () => {
-            const category = testUtils.createCategory({isNew: true});
+            const category = testUtils.createDummyCategory({isNew: true});
             const uploader = createUploader_(category);
 
             zendeskClient.categories.create.resolves({id: 123456, position: 42});
@@ -147,7 +147,7 @@ describe('CategoryUploader', () => {
         });
 
         it('should write the metadata after it has been updated', () => {
-            const category = testUtils.createCategory({isNew: true});
+            const category = testUtils.createDummyCategory({isNew: true});
             const uploader = createUploader_(category);
 
             zendeskClient.categories.create.resolves({id: 123456, position: 42});
@@ -160,12 +160,12 @@ describe('CategoryUploader', () => {
         });
 
         it('should create each section passed in the `sections` array', () => {
-            const category = testUtils.createCategory({isNew: true});
+            const category = testUtils.createDummyCategory({isNew: true});
             const uploader = createUploader_(category);
 
             category.sections = [
-                testUtils.createSection({isNew: true, category: category}),
-                testUtils.createSection({isNew: true, category: category})
+                testUtils.createDummySection({isNew: true, category: category}),
+                testUtils.createDummySection({isNew: true, category: category})
             ];
 
             return uploader.create()
@@ -176,7 +176,7 @@ describe('CategoryUploader', () => {
         });
 
         it('should not create any sections if no sections were provided', () => {
-            const category = testUtils.createCategory({isNew: true, sections: []});
+            const category = testUtils.createDummyCategory({isNew: true, sections: []});
             const uploader = createUploader_(category);
 
             return uploader.create()
@@ -187,7 +187,7 @@ describe('CategoryUploader', () => {
         });
 
         it('should reject with an error if a section creation returns an error', () => {
-            const category = testUtils.createCategory({isNew: true});
+            const category = testUtils.createDummyCategory({isNew: true});
             const uploader = createUploader_(category);
             const error = new Error('error');
 
@@ -200,7 +200,7 @@ describe('CategoryUploader', () => {
     describe('sync', () => {
         describe('category update', () => {
             it('should update a category if it has been changed', () => {
-                const category = testUtils.createCategory({isChanged: true});
+                const category = testUtils.createDummyCategory({isChanged: true});
                 const uploader = createUploader_(category);
 
                 return uploader.sync()
@@ -211,7 +211,7 @@ describe('CategoryUploader', () => {
             });
 
             it('should log update category action if category changed', () => {
-                const category = testUtils.createCategory({isChanged: true, path: 'category/path'});
+                const category = testUtils.createDummyCategory({isChanged: true, path: 'category/path'});
                 const uploader = createUploader_(category);
 
                 return uploader.sync()
@@ -222,7 +222,7 @@ describe('CategoryUploader', () => {
             });
 
             it('should not update a category if it has not been changed', () => {
-                const category = testUtils.createCategory({isChanged: false});
+                const category = testUtils.createDummyCategory({isChanged: false});
                 const uploader = createUploader_(category);
 
                 return uploader.sync()
@@ -233,7 +233,7 @@ describe('CategoryUploader', () => {
             });
 
             it('should not log update category action if was not changed', () => {
-                const category = testUtils.createCategory({isChanged: false});
+                const category = testUtils.createDummyCategory({isChanged: false});
                 const uploader = createUploader_(category);
 
                 return uploader.sync()
@@ -244,7 +244,7 @@ describe('CategoryUploader', () => {
             });
 
             it('should update the correct category zendeskId', () => {
-                const category = testUtils.createCategory({
+                const category = testUtils.createDummyCategory({
                     isChanged: true,
                     meta: {zendeskId: 12345}
                 });
@@ -258,7 +258,7 @@ describe('CategoryUploader', () => {
             });
 
             it('should reject the promise when the update category API returns an error', () => {
-                const category = testUtils.createCategory({isChanged: true});
+                const category = testUtils.createDummyCategory({isChanged: true});
                 const uploader = createUploader_(category);
                 const error = new Error('error');
 
@@ -268,7 +268,7 @@ describe('CategoryUploader', () => {
             });
 
             it('should set the category `position` to the request if one is provided', () => {
-                const category = testUtils.createCategory({
+                const category = testUtils.createDummyCategory({
                     isChanged: true,
                     meta: {position: 42}
                 });
@@ -288,7 +288,7 @@ describe('CategoryUploader', () => {
 
         describe('translation update', () => {
             it('should update the translation if the category has changed', () => {
-                const category = testUtils.createCategory({isChanged: true});
+                const category = testUtils.createDummyCategory({isChanged: true});
                 const uploader = createUploader_(category);
 
                 return uploader.sync()
@@ -299,7 +299,7 @@ describe('CategoryUploader', () => {
             });
 
             it('should not update the translation if the category has not changed', () => {
-                const category = testUtils.createCategory({isChanged: false});
+                const category = testUtils.createDummyCategory({isChanged: false});
                 const uploader = createUploader_(category);
 
                 return uploader.sync()
@@ -310,7 +310,7 @@ describe('CategoryUploader', () => {
             });
 
             it('should update the translation for the correct category zendeskId', () => {
-                const category = testUtils.createCategory({
+                const category = testUtils.createDummyCategory({
                     isChanged: true,
                     meta: {zendeskId: 12345}
                 });
@@ -324,7 +324,7 @@ describe('CategoryUploader', () => {
             });
 
             it('should reject the promise when the translation API returns an error', () => {
-                const category = testUtils.createCategory({isChanged: true});
+                const category = testUtils.createDummyCategory({isChanged: true});
                 const uploader = createUploader_(category);
                 const error = new Error('error');
 
@@ -335,7 +335,7 @@ describe('CategoryUploader', () => {
             });
 
             it('should update the translation for the correct locale', () => {
-                const category = testUtils.createCategory({
+                const category = testUtils.createDummyCategory({
                     isChanged: true,
                     meta: {
                         locale: 'test-locale'
@@ -351,7 +351,7 @@ describe('CategoryUploader', () => {
             });
 
             it('should set the locale to the request', () => {
-                const category = testUtils.createCategory({
+                const category = testUtils.createDummyCategory({
                     isChanged: true,
                     meta: {locale: 'test-locale'}
                 });
@@ -369,7 +369,7 @@ describe('CategoryUploader', () => {
             });
 
             it('should set the category title to the request', () => {
-                const category = testUtils.createCategory({
+                const category = testUtils.createDummyCategory({
                     isChanged: true,
                     meta: {title: 'Test Title'}
                 });
@@ -387,7 +387,7 @@ describe('CategoryUploader', () => {
             });
 
             it('should set the category description to the request if one is provided', () => {
-                const category = testUtils.createCategory({
+                const category = testUtils.createDummyCategory({
                     isChanged: true,
                     meta: {description: 'Description goes here'}
                 });
@@ -407,7 +407,7 @@ describe('CategoryUploader', () => {
 
         describe('hash', () => {
             it('should update category hash after updating category if category was changed', () => {
-                const category = testUtils.createCategory({isChanged: true});
+                const category = testUtils.createDummyCategory({isChanged: true});
                 const uploader = createUploader_(category);
 
                 return uploader.sync()
@@ -417,7 +417,7 @@ describe('CategoryUploader', () => {
             });
 
             it('should reject if failed to update category hash', () => {
-                const category = testUtils.createCategory({isChanged: true});
+                const category = testUtils.createDummyCategory({isChanged: true});
                 const uploader = createUploader_(category);
                 const error = new Error('error');
 
@@ -428,7 +428,7 @@ describe('CategoryUploader', () => {
             });
 
             it('should not update category hash if category has not been changed', () => {
-                const category = testUtils.createCategory({isChanged: false});
+                const category = testUtils.createDummyCategory({isChanged: false});
                 const uploader = createUploader_(category);
 
                 return uploader.sync()
@@ -440,10 +440,10 @@ describe('CategoryUploader', () => {
 
         describe('section sync', () => {
             it('should sync each section passed in the `sections` array', () => {
-                const category = testUtils.createCategory();
+                const category = testUtils.createDummyCategory();
                 category.sections = [
-                    testUtils.createSection({category: category}),
-                    testUtils.createSection({category: category})
+                    testUtils.createDummySection({category: category}),
+                    testUtils.createDummySection({category: category})
                 ];
                 const uploader = createUploader_(category);
 
@@ -455,7 +455,7 @@ describe('CategoryUploader', () => {
             });
 
             it('should not sync any sections if no sections were provided', () => {
-                const category = testUtils.createCategory({sections: []});
+                const category = testUtils.createDummyCategory({sections: []});
                 const uploader = createUploader_(category);
 
                 return uploader.sync()
@@ -466,7 +466,7 @@ describe('CategoryUploader', () => {
             });
 
             it('should reject with an error if a section sync returns an error', () => {
-                const category = testUtils.createCategory();
+                const category = testUtils.createDummyCategory();
                 const error = {error: 'error'};
                 SectionUploader.prototype.sync.rejects(error);
                 const uploader = createUploader_(category);

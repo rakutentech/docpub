@@ -1,11 +1,10 @@
-const _ = require('lodash');
 const mockFs = require('mock-fs');
 const Section = require('../../lib/section');
 const Category = require('../../lib/category');
 const metadata = require('../../lib/metadata');
 const Metadata = require('../../lib/metadata/metadata');
 const logger = require('../../lib/logger');
-const createDummyConfig = require('./test-utils').createDummyConfig;
+const createCategory = require('./test-utils').createCategory;
 
 describe('Category', () => {
     const sandbox = sinon.sandbox.create();
@@ -28,19 +27,19 @@ describe('Category', () => {
         });
 
         it('should set category path as passed path', () => {
-            const category = createCategory_({path: 'foo'});
+            const category = createCategory({path: 'foo'});
 
             expect(category.path).to.be.equal('foo');
         });
 
         it('should set category type as `category`', () => {
-            const category = createCategory_();
+            const category = createCategory();
 
             expect(category.type).to.be.eql('category');
         });
 
         it('should initialise metadata', () => {
-            const category = createCategory_();
+            const category = createCategory();
 
             expect(category.meta).to.be.instanceOf(Metadata);
         });
@@ -48,7 +47,7 @@ describe('Category', () => {
         it('should initialise metadata for category', () => {
             sandbox.spy(metadata, 'buildForCategory');
 
-            createCategory_({path: 'some_path'});
+            createCategory({path: 'some_path'});
 
             expect(metadata.buildForCategory).to.be.calledWith('some_path');
         });
@@ -69,7 +68,7 @@ describe('Category', () => {
         it('should log read category action', () => {
             mockFs({});
 
-            const category = createCategory_({path: '.'});
+            const category = createCategory({path: '.'});
 
             return category.read()
                 .then(() => {
@@ -80,7 +79,7 @@ describe('Category', () => {
         it('should read metadata', () => {
             mockFs({});
 
-            const category = createCategory_({path: '.'});
+            const category = createCategory({path: '.'});
 
             return category.read()
                 .then(() => {
@@ -94,7 +93,7 @@ describe('Category', () => {
                 'another_section': {}
             });
 
-            const category = createCategory_({path: '.'});
+            const category = createCategory({path: '.'});
 
             return category.read()
                 .then(() => {
@@ -108,7 +107,7 @@ describe('Category', () => {
                 'another_section': {}
             });
 
-            const category = createCategory_({path: '.'});
+            const category = createCategory({path: '.'});
 
             return category.read()
                 .then(() => {
@@ -121,7 +120,7 @@ describe('Category', () => {
                 'section': {}
             });
 
-            const category = createCategory_({path: '.'});
+            const category = createCategory({path: '.'});
 
             return category.read()
                 .then(() => {
@@ -132,12 +131,3 @@ describe('Category', () => {
         });
     });
 });
-
-function createCategory_(opts, config) {
-    opts = _.defaults(opts || {}, {
-        path: 'path'
-    });
-
-    return new Category(opts.path, createDummyConfig(config), opts.parent);
-}
-

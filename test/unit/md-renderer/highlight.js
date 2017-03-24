@@ -39,7 +39,7 @@ describe('highlighter', () => {
         const language = 'javascript';
 
         highlight(code, language);
-        expect(logger.warn).to.be.calledWith(`Highlight.js returned an error. `);
+        expect(logger.warn).to.be.calledWith(sinon.match('Highlight.js'));
     });
 
     it('should return highlighted string', () => {

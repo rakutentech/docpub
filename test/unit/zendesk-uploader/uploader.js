@@ -2,7 +2,7 @@ const Promise = require('bluebird');
 const Uploader = require('../../../lib/zendesk-uploader/uploader');
 const apiUtils = require('../../../lib/zendesk-uploader/api-utils');
 
-const createDummyConfig = require('./test-utils').createDummyConfig;
+const testUtils = require('../test-utils');
 
 describe('Uploader', () => {
     const sandbox = sinon.sandbox.create();
@@ -27,7 +27,7 @@ describe('Uploader', () => {
             /*eslint-disable no-new*/
             new Uploader(
                 {meta: {}},
-                createDummyConfig(),
+                testUtils.createDummyConfig(),
                 zendeskClient
              );
             /*eslint-enable no-new*/
@@ -78,7 +78,7 @@ describe('Uploader', () => {
 });
 
 function createUploader_(document) {
-    const config = createDummyConfig();
+    const config = testUtils.createDummyConfig();
 
     return new Uploader(document, config);
 }

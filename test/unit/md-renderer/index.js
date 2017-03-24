@@ -159,7 +159,7 @@ describe('MarkdownRenderer', () => {
 
         it('should highlight code blocks if the `highlight` config option is set to true', () => {
             const config = createDummyConfig({
-                renderer: {highlight: true}
+                rendering: {highlight: true}
             });
             const document = createDocument({config: config});
             const renderer = new MarkdownRenderer(document, config);
@@ -172,7 +172,7 @@ describe('MarkdownRenderer', () => {
 
         it('should not highlight code blocks if the `highlight` config option is set to false', () => {
             const config = createDummyConfig({
-                renderer: {highlight: false}
+                rendering: {highlight: false}
             });
             const document = createDocument({config: config});
             const renderer = new MarkdownRenderer(document, config);

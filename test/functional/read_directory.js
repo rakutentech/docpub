@@ -1,7 +1,7 @@
 const Category = require('../../lib/category');
 const MarkdownRenderer = require('../../lib/md-renderer');
 const path = require('path');
-const createDummyConfig = require('../unit/zendesk-uploader/test-utils').createDummyConfig;
+const createDummyConfig = require('../unit/test-utils').createDummyConfig;
 
 describe('Documentation directory reading', () => {
     const sandbox = sinon.sandbox.create();
