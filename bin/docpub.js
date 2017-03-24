@@ -16,7 +16,8 @@ program
     .version(pkg.version)
     .option('-p, --path <path>', 'path to documents directory (defaults to process directory)')
     .option('--config-path <configPath>', 'path for the config')
-    .option('-v, --verbose', 'verbose output');
+    .option('-v, --verbose', 'verbose output')
+    .allowUnknownOption();
 
 program.on('--help', () => {
     console.log('  Overriding config');
