@@ -7,8 +7,7 @@ const Category = require('../../lib/category');
 function createDocument(opts) {
     opts = opts || {};
     opts = _.defaults(opts, {
-        path: 'path',
-        parent: undefined
+        path: 'path'
     });
 
     return new Document(opts.path, createDummyConfig(opts.config), opts.parent);
