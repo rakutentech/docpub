@@ -28,18 +28,18 @@ this option accepts path to the file, not to the folder, where config is located
 The minimal config must include following required options:
 
 - `username` - name of ZenDesk user with documentation publish access rights
-- `token` - access token of the user above
+- `token` - Zendesk API access token
 - `url` - fully qualified URL of your `ZenDesk` space
 
 Example:
 ```javascript
 {
-    "username": "user@example.com"
-    "token": "abc123def456ghi789"
-    "url": "example.zendesk.com"
+    "username": "user@example.com",
+    "token": "abc123def456ghi789",
+    "url": "https://example.zendesk.com"
 }
 ```
-Please see more about other configuration options and options overriding in [config](doc/config.md) section.
+Please see more about other configuration options and options overriding in [config](docs/config.md) section.
 
 ### Running
 

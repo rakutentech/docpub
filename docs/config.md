@@ -7,9 +7,9 @@ to specify only a few settings specific for your project:
 
 ```javascript
 {
-    "username": "user@example.com"
-    "token": "abc123def456ghi789"
-    "url": "example.zendesk.com"
+    "username": "user@example.com",
+    "token": "abc123def456ghi789",
+    "url": "example.zendesk.com",
     "rendering": {
         "highlight": true
     }
@@ -20,12 +20,12 @@ to specify only a few settings specific for your project:
 
 ### Generic settings:
 
-* `username` (required) — name of ZenDesk user with documentation publish access rights.
+* `username` (required, string) — name of ZenDesk user with documentation publish access rights.
   On ZenDesk, this user would be displayed as documentation publisher.
 
-* `token` (required) — access token of the user above.
+* `token` (required, string) — access token of the user above.
 
-* `url` (required) — fully qualified URL of your `ZenDesk` space. Please note, that this should
+* `url` (required, string — fully qualified URL of your `ZenDesk` space. Please note, that this should
   be only base URL, path shall not be included. Example: `example.zendesk.com`
 
 ### Rendering settings
@@ -35,7 +35,7 @@ but may add impact on resulting HTML structure too.
 
 Settings list:
 
-* `highlight` - should highlighting be applied to code block in markdown or not.
+* `highlight` (optional, boolean) - should highlighting be applied to code block in markdown or not.
   If enabled, will add HTML markup and CSS classes provided by [highlight.js](https://highlightjs.org).
   Please note, that stylesheets themselves will be neither linked nor inlined into
   the resulting HTML because, by default, such content considered as unsafe and
