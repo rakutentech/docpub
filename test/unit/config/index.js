@@ -4,8 +4,18 @@ const mockFs = require('mock-fs');
 const createDummyConfig = require('../test-utils').createDummyConfig;
 
 describe('Config', () => {
+    let oldArgv;
+    let oldEnv;
+
+    beforeEach(() => {
+        oldArgv = [].concat(process.argv);
+        oldEnv = _.clone(process.env);
+    });
+
     afterEach(() => {
         mockFs.restore();
+        process.env = oldEnv;
+        process.argv = oldArgv;
     });
 
     describe('constructor', () => {
@@ -101,19 +111,6 @@ describe('Config', () => {
         });
 
         describe('overrides', () => {
-            let oldArgv;
-            let oldEnv;
-
-            beforeEach(() => {
-                oldArgv = [].concat(process.argv);
-                oldEnv = _.clone(process.env);
-            });
-
-            afterEach(() => {
-                process.env = oldEnv;
-                process.argv = oldArgv;
-            });
-
             it('should override option in config with CLI argument beginning with `--`', () => {
                 process.argv = process.argv.concat('--username', 'argv_username');
                 stubConfig_({
@@ -278,19 +275,6 @@ describe('Config', () => {
             });
 
             describe('rendering', () => {
-                let oldArgv;
-                let oldEnv;
-
-                beforeEach(() => {
-                    oldArgv = [].concat(process.argv);
-                    oldEnv = _.clone(process.env);
-                });
-
-                afterEach(() => {
-                    process.env = oldEnv;
-                    process.argv = oldArgv;
-                });
-
                 it('should not throw if `rendering` is not provided', () => {
                     stubConfig_({
                         path: './docpub.config',
