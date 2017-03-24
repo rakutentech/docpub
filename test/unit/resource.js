@@ -1,8 +1,10 @@
+const _ = require('lodash');
 const mockFs = require('mock-fs');
 const Resource = require('../../lib/resource');
 const Article = require('../../lib/article');
 const Document = require('../../lib/document');
 const ResourceMetadata = require('../../lib/metadata/resource-metadata');
+const createDummyConfig = require('./test-utils').createDummyConfig;
 
 const hash = require('../../lib/hash');
 const fs = require('fs-promise');
@@ -28,24 +30,24 @@ describe('Resource', () => {
         });
 
         it('should throw if parent is not defined', () => {
-            expect(() => new Resource('foo')).to.throw(/article/);
+            expect(() => new Resource('foo', createDummyConfig())).to.throw(/article/);
         });
 
         it('should throw if parent is not a Document', () => {
             const article = {};
 
-            expect(() => new Resource('foo', article)).to.throw(/Document/);
+            expect(() => new Resource('path', createDummyConfig(), article)).to.throw(/Document/);
         });
 
         it('should throw if parent is other Document then Article', () => {
-            const parent = new Document('path');
+            const parent = new Document('path', createDummyConfig());
 
-            expect(() => new Resource('foo', parent)).to.throw(/article/);
+            expect(() => new Resource('path', createDummyConfig(), parent)).to.throw(/article/);
         });
 
         it('should return it`s parent as article', () => {
-            const article = new Article('foo', new Document('path'));
-            const resource = new Resource('bar', article);
+            const article = new Article('foo', createDummyConfig(), new Document('path', createDummyConfig()));
+            const resource = createResource_({article: article});
 
             expect(resource.article).to.be.equal(article);
         });
@@ -80,7 +82,7 @@ describe('Resource', () => {
                     'res.ext': 'resource_contents'
                 }
             });
-            const resource = createResource_('dir/res.ext');
+            const resource = createResource_({path: 'dir/res.ext'});
             const expectedHash = hash('resource_contents');
 
             return resource.read()
@@ -92,7 +94,7 @@ describe('Resource', () => {
 
     describe('read', () => {
         it('should reject if error on resource reading happened', () => {
-            const resource = createResource_('path');
+            const resource = createResource_({path: 'path'});
             const error = new Error('error');
 
             sandbox.stub(fs, 'readFile').rejects(error);
@@ -105,7 +107,7 @@ describe('Resource', () => {
             mockFs({
                 'res.ext': 'resource_contents'
             });
-            const resource = createResource_('res.ext');
+            const resource = createResource_({path: 'res.ext'});
             const expectedHash = hash('resource_contents');
 
             return resource.read()
@@ -129,12 +131,12 @@ describe('Resource', () => {
         });
     });
 
-    function createResource_(path) {
-        path = path || '.';
+    function createResource_(opts) {
+        opts = _.defaults(opts || {}, {
+            path: '.',
+            article: new Article('foo', createDummyConfig(), new Document('path', createDummyConfig()))
+        });
 
-        const article = new Article('foo', new Document('path'));
-        const resource = new Resource(path, article);
-
-        return resource;
+        return new Resource(opts.path, createDummyConfig(), opts.article);
     }
 });

@@ -1,6 +1,6 @@
 const MarkdownIt = require('markdown-it');
-const Document = require('../../../lib/document');
 const imageReplacer = require('../../../lib/md-renderer/image-replacer');
+const createDocument = require('../test-utils').createDocument;
 
 describe('ImageReplacer', () => {
     it('should replace relative image paths with a link to the Zendesk attachment', () => {
@@ -44,7 +44,7 @@ describe('ImageReplacer', () => {
     });
 
     it('should not replace the image src if findByPath returns `undefined`', () => {
-        const document = new Document('path');
+        const document = createDocument({path: 'path'});
         const renderer = createRenderer_(123456, document);
         document.findByPath.returns(undefined);
         const markdown = '![alt text](../non-existent-path "Logo Text")';
@@ -67,7 +67,7 @@ describe('ImageReplacer', () => {
 });
 
 function createRenderer_(attachmentId, document) {
-    document = document || new Document('path');
+    document = document || createDocument();
     document.findByPath = sinon.stub().returns(attachmentId);
     const renderer = new MarkdownIt()
         .use(imageReplacer, document);

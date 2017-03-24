@@ -1,13 +1,17 @@
 const MarkdownRenderer = require('../../../lib/md-renderer');
 const MarkdownIt = require('markdown-it');
-const Document = require('../../../lib/document');
+const createDocument = require('../test-utils').createDocument;
+const createDummyConfig = require('../test-utils').createDummyConfig;
 
 describe('MarkdownRenderer', () => {
     const sandbox = sinon.sandbox.create();
     let mdRenderer = null;
 
     beforeEach(() => {
-        mdRenderer = new MarkdownRenderer(new Document('path'));
+        mdRenderer = new MarkdownRenderer(
+            createDocument({path: 'path'}),
+            createDummyConfig()
+        );
     });
 
     afterEach(() => {
@@ -132,9 +136,9 @@ describe('MarkdownRenderer', () => {
         });
 
         it('should convert relative links to Zendesk ID paths', () => {
-            const document = new Document('path');
+            const document = createDocument({path: 'path'});
             sandbox.stub(document, 'findByPath').returns(12345);
-            const renderer = new MarkdownRenderer(document);
+            const renderer = new MarkdownRenderer(document, createDummyConfig());
             const markdown = '[Link](test/article.md)';
             const html = renderer.render(markdown);
 
@@ -143,14 +147,40 @@ describe('MarkdownRenderer', () => {
         });
 
         it('should convert relative image paths to Zendesk ID paths', () => {
-            const document = new Document('path');
+            const document = createDocument({path: 'path'});
             sandbox.stub(document, 'findByPath').returns(12345);
-            const renderer = new MarkdownRenderer(document);
+            const renderer = new MarkdownRenderer(document, createDummyConfig());
             const markdown = '![alt text](images/image.jpg "Title Text")';
             const html = renderer.render(markdown);
 
             expect(html)
                 .to.include('src="/hc/article_attachments/12345/image.jpg"');
+        });
+
+        it('should highlight code blocks if the `highlight` config option is set to true', () => {
+            const config = createDummyConfig({
+                rendering: {highlight: true}
+            });
+            const document = createDocument({config: config});
+            const renderer = new MarkdownRenderer(document, config);
+            const markdown = '```javascript\nfunction foo() {}\n```';
+            const html = renderer.render(markdown);
+
+            expect(html)
+                .to.be.equal('<pre><code class="language-javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">foo</span>(<span class="hljs-params"></span>) </span>{}\n</code></pre>\n');
+        });
+
+        it('should not highlight code blocks if the `highlight` config option is set to false', () => {
+            const config = createDummyConfig({
+                rendering: {highlight: false}
+            });
+            const document = createDocument({config: config});
+            const renderer = new MarkdownRenderer(document, config);
+            const markdown = '```javascript\nfunction foo() {}\n```';
+            const html = renderer.render(markdown);
+
+            expect(html)
+                .to.be.equal('<pre><code class="language-javascript">function foo() {}\n</code></pre>\n');
         });
     });
 });

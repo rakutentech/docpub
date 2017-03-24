@@ -1,4 +1,3 @@
-const _ = require('lodash');
 const mockFs = require('mock-fs');
 const Section = require('../../lib/section');
 const Article = require('../../lib/article');
@@ -6,6 +5,8 @@ const Category = require('../../lib/category');
 const metadata = require('../../lib/metadata');
 const Metadata = require('../../lib/metadata/metadata');
 const logger = require('../../lib/logger');
+const createSection = require('./test-utils').createSection;
+const createDummyConfig = require('./test-utils').createDummyConfig;
 
 describe('Section', () => {
     const sandbox = sinon.sandbox.create();
@@ -28,30 +29,30 @@ describe('Section', () => {
         });
 
         it('should throw if parent category is not passed', () => {
-            expect(() => new Section('.')).to.throw(/Missing parent category/);
+            expect(() => new Section('.', createDummyConfig())).to.throw(/Missing parent category/);
         });
 
         it('should set passed path as section path', () => {
-            const section = createSection_({path: 'foo'});
+            const section = createSection({path: 'foo'});
 
             expect(section.path).to.be.equal('foo');
         });
 
         it('should set parent category as passed category', () => {
             const category = sinon.createStubInstance(Category);
-            const section = new Section('path', category);
+            const section = createSection({category: category});
 
             expect(section.category).to.be.equal(category);
         });
 
         it('should set section type as `section`', () => {
-            const section = createSection_();
+            const section = createSection();
 
             expect(section.type).to.be.eql('section');
         });
 
         it('should initialise metadata', () => {
-            const section = createSection_();
+            const section = createSection();
 
             expect(section.meta).to.be.instanceOf(Metadata);
         });
@@ -59,7 +60,7 @@ describe('Section', () => {
         it('should initialise metadata for section', () => {
             sandbox.spy(metadata, 'buildForSection');
 
-            createSection_({path: 'some_path'});
+            createSection({path: 'some_path'});
 
             expect(metadata.buildForSection).to.be.calledWith('some_path');
         });
@@ -80,7 +81,7 @@ describe('Section', () => {
         it('should log read section action', () => {
             mockFs({});
 
-            const section = createSection_();
+            const section = createSection();
 
             return section.read()
                 .then(() => {
@@ -91,7 +92,7 @@ describe('Section', () => {
         it('should load metadata', () => {
             mockFs({});
 
-            const section = createSection_();
+            const section = createSection();
 
             return section.read()
                 .then(() => {
@@ -105,7 +106,7 @@ describe('Section', () => {
                 'another_article': {}
             });
 
-            const section = createSection_();
+            const section = createSection();
 
             return section.read()
                 .then(() => {
@@ -119,7 +120,7 @@ describe('Section', () => {
                 'another_article': {}
             });
 
-            const section = createSection_();
+            const section = createSection();
 
             return section.read()
                 .then(() => {
@@ -132,7 +133,7 @@ describe('Section', () => {
                 'article': {}
             });
 
-            const section = createSection_();
+            const section = createSection();
 
             return section.read()
                 .then(() => {
@@ -143,12 +144,3 @@ describe('Section', () => {
         });
     });
 });
-
-function createSection_(opts) {
-    opts = _.defaults(opts || {}, {
-        path: '.',
-        category: sinon.createStubInstance(Category)
-    });
-
-    return new Section(opts.path, opts.category);
-}

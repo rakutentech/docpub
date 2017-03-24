@@ -25,6 +25,18 @@ describe('Validation utils', () => {
         });
     });
 
+    describe('shouldBeBoolean', () => {
+        it('should throw if value is not a boolean', () => {
+            expect(() => validationUtils.shouldBeBoolean(1))
+                .to.throw(/boolean/);
+        });
+
+        it('should not throw if value is a boolean', () => {
+            expect(() => validationUtils.shouldBeBoolean(true))
+                .to.not.throw();
+        });
+    });
+
     describe('validateViewableBy', () => {
         it('should throw if value is not a string', () => {
             expect(() => validationUtils.validateViewableBy(1))

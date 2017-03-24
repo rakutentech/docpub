@@ -1,7 +1,7 @@
 const zendesk = require('node-zendesk');
 const proxyquire = require('proxyquire');
 
-const createDummyConfig = require('./test-utils').createDummyConfig;
+const createDummyConfig = require('../test-utils').createDummyConfig;
 
 let apiUtils;
 

@@ -4,6 +4,7 @@ const Category = require('../../lib/category');
 const metadata = require('../../lib/metadata');
 const Metadata = require('../../lib/metadata/metadata');
 const logger = require('../../lib/logger');
+const createCategory = require('./test-utils').createCategory;
 
 describe('Category', () => {
     const sandbox = sinon.sandbox.create();
@@ -26,19 +27,19 @@ describe('Category', () => {
         });
 
         it('should set category path as passed path', () => {
-            const category = new Category('foo');
+            const category = createCategory({path: 'foo'});
 
             expect(category.path).to.be.equal('foo');
         });
 
         it('should set category type as `category`', () => {
-            const category = new Category('some_path');
+            const category = createCategory();
 
             expect(category.type).to.be.eql('category');
         });
 
         it('should initialise metadata', () => {
-            const category = new Category('some_path');
+            const category = createCategory();
 
             expect(category.meta).to.be.instanceOf(Metadata);
         });
@@ -46,9 +47,7 @@ describe('Category', () => {
         it('should initialise metadata for category', () => {
             sandbox.spy(metadata, 'buildForCategory');
 
-            /*eslint-disable no-new*/
-            new Category('some_path');
-            /*eslint-enable no-new*/
+            createCategory({path: 'some_path'});
 
             expect(metadata.buildForCategory).to.be.calledWith('some_path');
         });
@@ -69,7 +68,7 @@ describe('Category', () => {
         it('should log read category action', () => {
             mockFs({});
 
-            const category = new Category('.');
+            const category = createCategory({path: '.'});
 
             return category.read()
                 .then(() => {
@@ -80,7 +79,7 @@ describe('Category', () => {
         it('should read metadata', () => {
             mockFs({});
 
-            const category = new Category('.');
+            const category = createCategory({path: '.'});
 
             return category.read()
                 .then(() => {
@@ -94,7 +93,7 @@ describe('Category', () => {
                 'another_section': {}
             });
 
-            const category = new Category('.');
+            const category = createCategory({path: '.'});
 
             return category.read()
                 .then(() => {
@@ -108,7 +107,7 @@ describe('Category', () => {
                 'another_section': {}
             });
 
-            const category = new Category('.');
+            const category = createCategory({path: '.'});
 
             return category.read()
                 .then(() => {
@@ -121,7 +120,7 @@ describe('Category', () => {
                 'section': {}
             });
 
-            const category = new Category('.');
+            const category = createCategory({path: '.'});
 
             return category.read()
                 .then(() => {

@@ -1,7 +1,7 @@
 const ZendeskDeleter = require('../../../lib/zendesk-uploader/deleter');
 const apiUtils = require('../../../lib/zendesk-uploader/api-utils');
 const logger = require('../../../lib/logger');
-const testUtils = require('./test-utils');
+const testUtils = require('../test-utils');
 
 describe('Deleter', () => {
     const sandbox = sinon.sandbox.create();
@@ -28,7 +28,7 @@ describe('Deleter', () => {
 
     describe('constructor', () => {
         it('should not initialize an instance of zendesk client if one was already passed with the constructor', () => {
-            const category = testUtils.createCategory();
+            const category = testUtils.createDummyCategory();
 
             sandbox.stub(apiUtils, 'getClient');
             /*eslint-disable no-new*/
@@ -41,7 +41,7 @@ describe('Deleter', () => {
 
     describe('delete', () => {
         it('should return a promise on success', () => {
-            const category = testUtils.createCategory();
+            const category = testUtils.createDummyCategory();
             const deleter = createDeleter_(category);
 
             return expect(deleter.delete())
@@ -49,7 +49,7 @@ describe('Deleter', () => {
         });
 
         it('should reject with an error when the API returns an error', () => {
-            const category = testUtils.createCategory();
+            const category = testUtils.createDummyCategory();
             const deleter = createDeleter_(category);
             const error = new Error('error');
 
@@ -60,7 +60,7 @@ describe('Deleter', () => {
         });
 
         it('should log delete action', () => {
-            const category = testUtils.createCategory();
+            const category = testUtils.createDummyCategory();
             const deleter = createDeleter_(category);
 
             return deleter.delete()
@@ -70,9 +70,9 @@ describe('Deleter', () => {
         });
 
         it('should delete all articles that exist on zendesk but not in the Category tree', () => {
-            const category = testUtils.createCategory();
+            const category = testUtils.createDummyCategory();
             category.flatTree.returns([
-                testUtils.createArticle({
+                testUtils.createDummyArticle({
                     meta: {zendeskId: 123456}
                 })
             ]);
@@ -91,12 +91,12 @@ describe('Deleter', () => {
         });
 
         it('should not delete any articles that exist in the category tree', () => {
-            const category = testUtils.createCategory();
+            const category = testUtils.createDummyCategory();
             category.flatTree.returns([
-                testUtils.createArticle({
+                testUtils.createDummyArticle({
                     meta: {zendeskId: 123456}
                 }),
-                testUtils.createArticle({
+                testUtils.createDummyArticle({
                     meta: {zendeskId: 654321}
                 })
             ]);
@@ -114,9 +114,9 @@ describe('Deleter', () => {
         });
 
         it('should delete all sections that exist on zendesk but not in the Category tree', () => {
-            const category = testUtils.createCategory();
+            const category = testUtils.createDummyCategory();
             category.flatTree.returns([
-                testUtils.createSection({
+                testUtils.createDummySection({
                     meta: {zendeskId: 1981}
                 })
             ]);
@@ -135,12 +135,12 @@ describe('Deleter', () => {
         });
 
         it('should not delete any sections that exist in the Category Tree', () => {
-            const category = testUtils.createCategory();
+            const category = testUtils.createDummyCategory();
             category.flatTree.returns([
-                testUtils.createSection({
+                testUtils.createDummySection({
                     meta: {zendeskId: 1981}
                 }),
-                testUtils.createSection({
+                testUtils.createDummySection({
                     meta: {zendeskId: 15697}
                 })
             ]);
@@ -158,12 +158,12 @@ describe('Deleter', () => {
         });
 
         it('should not delete any sections if there are no sections to delete but should still delete articles', () => {
-            const category = testUtils.createCategory();
+            const category = testUtils.createDummyCategory();
             category.flatTree.returns([
-                testUtils.createSection({
+                testUtils.createDummySection({
                     meta: {zendeskId: 1981}
                 }),
-                testUtils.createArticle({
+                testUtils.createDummyArticle({
                     meta: {zendeskId: 54874}
                 })
             ]);
@@ -183,12 +183,12 @@ describe('Deleter', () => {
         });
 
         it('should not delete any articles if there are no articles to delete but should still delete sections', () => {
-            const category = testUtils.createCategory();
+            const category = testUtils.createDummyCategory();
             category.flatTree.returns([
-                testUtils.createSection({
+                testUtils.createDummySection({
                     meta: {zendeskId: 1981}
                 }),
-                testUtils.createArticle({
+                testUtils.createDummyArticle({
                     meta: {zendeskId: 54874}
                 })
             ]);
@@ -208,12 +208,12 @@ describe('Deleter', () => {
         });
 
         it('should delete sections followed by articles', () => {
-            const category = testUtils.createCategory();
+            const category = testUtils.createDummyCategory();
             category.flatTree.returns([
-                testUtils.createSection({
+                testUtils.createDummySection({
                     meta: {zendeskId: 1981}
                 }),
-                testUtils.createArticle({
+                testUtils.createDummyArticle({
                     meta: {zendeskId: 54874}
                 })
             ]);

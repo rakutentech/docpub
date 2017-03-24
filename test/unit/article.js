@@ -1,4 +1,3 @@
-const _ = require('lodash');
 const mockFs = require('mock-fs');
 const Section = require('../../lib/section');
 const Article = require('../../lib/article');
@@ -9,6 +8,8 @@ const MarkdownRenderer = require('../../lib/md-renderer');
 const metadata = require('../../lib/metadata');
 const Metadata = require('../../lib/metadata/metadata');
 const logger = require('../../lib/logger');
+const createArticle = require('./test-utils').createArticle;
+const createDummyConfig = require('./test-utils').createDummyConfig;
 
 describe('Article', () => {
     const sandbox = sinon.sandbox.create();
@@ -26,40 +27,40 @@ describe('Article', () => {
         it('should throw if path is not string', () => {
             const path = {};
 
-            expect(() => new Section(path)).to.throw(/string/);
+            expect(() => new Article(path)).to.throw(/string/);
         });
 
         it('should throw if path empty', () => {
             const path = '';
 
-            expect(() => new Section(path)).to.throw(/empty/);
+            expect(() => new Article(path)).to.throw(/empty/);
         });
 
         it('should throw if parent section is not passed', () => {
-            expect(() => new Article('.')).to.throw(/Missing section/);
+            expect(() => new Article('.', createDummyConfig())).to.throw(/Missing section/);
         });
 
         it('should set article path as passed path', () => {
-            const article = createArticle_({path: 'foo'});
+            const article = createArticle({path: 'foo'});
 
             expect(article.path).to.be.eql('foo');
         });
 
         it('should set parent section as passed section', () => {
             const section = sinon.createStubInstance(Section);
-            const article = new Article('path', section);
+            const article = createArticle({section: section});
 
             expect(article.section).to.be.equal(section);
         });
 
         it('should set article type as `article`', () => {
-            const article = createArticle_();
+            const article = createArticle();
 
             expect(article.type).to.be.eql('article');
         });
 
         it('should initialise metadata', () => {
-            const article = createArticle_();
+            const article = createArticle();
 
             expect(article.meta).to.be.instanceOf(Metadata);
         });
@@ -67,7 +68,7 @@ describe('Article', () => {
         it('should initialise metadata for specified article', () => {
             sandbox.spy(metadata, 'buildForArticle');
 
-            createArticle_({path: 'some_path'});
+            createArticle({path: 'some_path'});
 
             expect(metadata.buildForArticle).to.be.calledWith('some_path');
         });
@@ -76,7 +77,7 @@ describe('Article', () => {
     // Sinon < 2.0.0 does not support stubbing getters, so we have to redefine properties in order to mock behavior
     describe('isChanged', () => {
         it('should return true if article hash differes from article userMetaHash', () => {
-            const article = createArticle_();
+            const article = createArticle();
 
             Object.defineProperty(article, 'hash', {value: 'abcdef'});
             article.meta = {hash: `0a1b2c`};
@@ -85,7 +86,7 @@ describe('Article', () => {
         });
 
         it('should return false if article has same hash and userMetaHash and article has no child resources', () => {
-            const article = createArticle_();
+            const article = createArticle();
 
             Object.defineProperty(article, 'hash', {value: 'abcdef'});
             article.meta = {hash: `abcdef`};
@@ -96,8 +97,8 @@ describe('Article', () => {
         });
 
         it('should return true if article has same hash and currentHash but one of child resources changed', () => {
-            const article = createArticle_();
-            const resource = new Resource('path', article);
+            const article = createArticle();
+            const resource = new Resource('path', createDummyConfig(), article);
 
             article.meta = {hash: `abcdef`};
             Object.defineProperty(article, 'hash', {value: 'abcdef'});
@@ -110,8 +111,8 @@ describe('Article', () => {
         });
 
         it('should return false if document has same hash and currentHash and no child resources changed', () => {
-            const article = createArticle_();
-            const resource = new Resource('path', article);
+            const article = createArticle();
+            const resource = new Resource('path', createDummyConfig(), article);
 
             article.meta = {hash: `abcdef`};
             Object.defineProperty(article, 'hash', {value: 'abcdef'});
@@ -133,7 +134,7 @@ describe('Article', () => {
             const section = sinon.createStubInstance(Section);
             section.meta = {zendeskId: 123456};
 
-            const article = new Article('.', section);
+            const article = new Article('.', createDummyConfig(), section);
 
             const expectedHash = hash('abcdef' + hash('content_goes_here') + '123456');
 
@@ -156,7 +157,7 @@ describe('Article', () => {
                 'content.md': `content_goes_here`
             });
 
-            const article = createArticle_();
+            const article = createArticle();
 
             return article.read()
                 .then(() => {
@@ -169,7 +170,7 @@ describe('Article', () => {
                 'content.md': `content_goes_here`
             });
 
-            const article = createArticle_();
+            const article = createArticle();
 
             return article.read()
                 .then(() => {
@@ -183,7 +184,7 @@ describe('Article', () => {
             });
             sandbox.spy(fsu, 'findFilesOfTypes').named('findFilesOfTypes');
 
-            const article = createArticle_();
+            const article = createArticle();
 
             return article.read()
                 .then(() => {
@@ -194,7 +195,7 @@ describe('Article', () => {
         it('should reject if unable to find any .md files', () => {
             mockFs({});
 
-            const article = createArticle_();
+            const article = createArticle();
 
             return expect(article.read())
                 .to.be.rejectedWith(/No markdown files/);
@@ -206,7 +207,7 @@ describe('Article', () => {
                 'more_content.md': `content_goes_here`
             });
 
-            const article = createArticle_();
+            const article = createArticle();
 
             return expect(article.read())
                 .to.be.rejectedWith(/more than 1 markdown/);
@@ -220,7 +221,7 @@ describe('Article', () => {
                 })
             });
 
-            const article = createArticle_('.');
+            const article = createArticle('.');
 
             return expect(article.read())
                 .to.be.rejectedWith(/EACCES/);
@@ -232,7 +233,7 @@ describe('Article', () => {
                 'image.jpg': 'image_bytes_here'
             });
 
-            const article = createArticle_();
+            const article = createArticle();
 
             return article.read()
                 .then(() => {
@@ -246,7 +247,7 @@ describe('Article', () => {
                 'image.jpg': 'image_bytes_here'
             });
 
-            const article = createArticle_();
+            const article = createArticle();
 
             return article.read()
                 .then(() => {
@@ -262,7 +263,7 @@ describe('Article', () => {
                 }
             });
 
-            const article = createArticle_({path: 'path/to/article'});
+            const article = createArticle({path: 'path/to/article'});
 
             return article.read()
                 .then(() => {
@@ -277,7 +278,7 @@ describe('Article', () => {
                 'image.jpg': 'image_bytes_here'
             });
 
-            const article = createArticle_();
+            const article = createArticle();
 
             return article.read()
                 .then(() => {
@@ -293,7 +294,7 @@ describe('Article', () => {
                 'image.jpeg': 'image_bytes_here'
             });
 
-            const article = createArticle_();
+            const article = createArticle();
 
             return article.read()
                 .then(() => {
@@ -309,7 +310,7 @@ describe('Article', () => {
                 'image.png': 'image_bytes_here'
             });
 
-            const article = createArticle_();
+            const article = createArticle();
 
             return article.read()
                 .then(() => {
@@ -325,7 +326,7 @@ describe('Article', () => {
                 'image.gif': 'image_bytes_here'
             });
 
-            const article = createArticle_();
+            const article = createArticle();
 
             return article.read()
                 .then(() => {
@@ -341,7 +342,7 @@ describe('Article', () => {
                 'image.svg': 'image_bytes_here'
             });
 
-            const article = createArticle_();
+            const article = createArticle();
 
             return article.read()
                 .then(() => {
@@ -357,7 +358,7 @@ describe('Article', () => {
                 'image.pdf': 'image_bytes_here'
             });
 
-            const article = createArticle_();
+            const article = createArticle();
 
             return article.read()
                 .then(() => {
@@ -378,7 +379,7 @@ describe('Article', () => {
                 'image.pdf': 'image_bytes_here'
             });
 
-            const article = createArticle_();
+            const article = createArticle();
 
             return article.read()
                 .then(() => {
@@ -403,7 +404,7 @@ describe('Article', () => {
 
             sandbox.stub(Resource.prototype, 'read').resolves();
 
-            const article = createArticle_();
+            const article = createArticle();
 
             return article.read()
                 .then(() => {
@@ -419,7 +420,7 @@ describe('Article', () => {
         });
 
         it('should update hash in meta with own hash', () => {
-            const article = createArticle_();
+            const article = createArticle();
             Object.defineProperty(article, 'hash', {value: 'abcdef'});
 
             return article.updateHash()
@@ -430,13 +431,13 @@ describe('Article', () => {
         });
 
         it('should update hashes of all its resources', () => {
-            const article = createArticle_();
+            const article = createArticle();
             Object.defineProperty(article, 'hash', {value: 'abcdef'});
 
-            const resource = new Resource('res_name', article);
+            const resource = new Resource('res_name', createDummyConfig(), article);
             Object.defineProperty(resource, 'hash', {value: '123abc'});
 
-            const anotherResource = new Resource('another_res_name', article);
+            const anotherResource = new Resource('another_res_name', createDummyConfig(), article);
             Object.defineProperty(anotherResource, 'hash', {value: '456def'});
 
             article.setChildren([resource, anotherResource]);
@@ -453,7 +454,7 @@ describe('Article', () => {
         });
 
         it('should write updated meta to the disc', () => {
-            const article = createArticle_();
+            const article = createArticle();
             Object.defineProperty(article, 'hash', {value: 'abcdef'});
 
             return article.updateHash()
@@ -464,7 +465,7 @@ describe('Article', () => {
         });
 
         it('should reject promise if write failed', () => {
-            const article = createArticle_();
+            const article = createArticle();
             const error = new Error('error');
 
             Object.defineProperty(article, 'hash', {value: 'abcdef'});
@@ -477,7 +478,7 @@ describe('Article', () => {
 
     describe('convertMarkdown', () => {
         it('should reject if article contents were not yet read', () => {
-            const article = createArticle_();
+            const article = createArticle();
 
             return expect(article.convertMarkdown())
                 .to.be.rejectedWith(/No path to markdown/);
@@ -514,7 +515,7 @@ describe('Article', () => {
             });
             sandbox.spy(MarkdownRenderer.prototype, 'render');
 
-            const article = createArticle_();
+            const article = createArticle();
 
             return article.read()
                 .then(() => article.convertMarkdown())
@@ -530,19 +531,10 @@ describe('Article', () => {
                 'content.md': markdown || '# Header'
             });
 
-            const article = createArticle_();
+            const article = createArticle();
 
             return article.read()
                 .then(() => article.convertMarkdown());
         }
     });
 });
-
-function createArticle_(opts) {
-    opts = _.defaults(opts || {}, {
-        path: '.',
-        section: sinon.createStubInstance(Section)
-    });
-
-    return new Article(opts.path, opts.section);
-}

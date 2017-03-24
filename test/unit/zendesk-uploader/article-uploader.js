@@ -1,6 +1,6 @@
 const ArticleUploader = require('../../../lib/zendesk-uploader/article-uploader');
 const logger = require('../../../lib/logger');
-const testUtils = require('./test-utils');
+const testUtils = require('../test-utils');
 
 describe('ArticleUploader', () => {
     const sandbox = sinon.sandbox.create();
@@ -28,7 +28,7 @@ describe('ArticleUploader', () => {
 
     describe('create', () => {
         it('should create an article if it doesnt exist', () => {
-            const article = testUtils.createArticle({isNew: true});
+            const article = testUtils.createDummyArticle({isNew: true});
             const uploader = createUploader_(article);
 
             return uploader.create()
@@ -38,7 +38,7 @@ describe('ArticleUploader', () => {
         });
 
         it('should log create article action if article is new', () => {
-            const article = testUtils.createArticle({isNew: true, path: 'article/path'});
+            const article = testUtils.createDummyArticle({isNew: true, path: 'article/path'});
             const uploader = createUploader_(article);
 
             return uploader.create()
@@ -49,7 +49,7 @@ describe('ArticleUploader', () => {
         });
 
         it('should not create an article if it already exists on Zendesk', () => {
-            const article = testUtils.createArticle({isNew: false});
+            const article = testUtils.createDummyArticle({isNew: false});
             const uploader = createUploader_(article);
 
             return uploader.create()
@@ -57,7 +57,7 @@ describe('ArticleUploader', () => {
         });
 
         it('should not log create article action if article is not new', () => {
-            const article = testUtils.createArticle({isNew: false});
+            const article = testUtils.createDummyArticle({isNew: false});
             const uploader = createUploader_(article);
 
             return uploader.create()
@@ -68,7 +68,7 @@ describe('ArticleUploader', () => {
         });
 
         it('should reject the promise with an error when the api returns an error', () => {
-            const article = testUtils.createArticle({isNew: true});
+            const article = testUtils.createDummyArticle({isNew: true});
             const uploader = createUploader_(article);
             const error = new Error('error');
 
@@ -79,7 +79,7 @@ describe('ArticleUploader', () => {
         });
 
         it('should set `locale` metadata to the request', () => {
-            const article = testUtils.createArticle({
+            const article = testUtils.createDummyArticle({
                 isNew: true,
                 meta: {locale: 'test-locale'}
             });
@@ -97,7 +97,7 @@ describe('ArticleUploader', () => {
         });
 
         it('should update the articles zendeskId meta property', () => {
-            const article = testUtils.createArticle({isNew: true});
+            const article = testUtils.createDummyArticle({isNew: true});
             const uploader = createUploader_(article);
 
             zendeskClient.articles.create.resolves({id: 123456, position: 42});
@@ -110,7 +110,7 @@ describe('ArticleUploader', () => {
         });
 
         it('should write the metadata after it has been updated', () => {
-            const article = testUtils.createArticle({isNew: true});
+            const article = testUtils.createDummyArticle({isNew: true});
             const uploader = createUploader_(article);
 
             zendeskClient.articles.create.resolves({id: 123456, position: 42});
@@ -124,14 +124,14 @@ describe('ArticleUploader', () => {
 
         describe('resources', () => {
             it('should upload resources to the correct zendeskId', () => {
-                const article = testUtils.createArticle({
+                const article = testUtils.createDummyArticle({
                     isChanged: true,
                     meta: {zendeskId: 123456}
                 });
                 const uploader = createUploader_(article);
 
                 article.resources = [
-                    testUtils.createResource({isNew: true})
+                    testUtils.createDummyResource({isNew: true})
                 ];
 
                 return uploader.create()
@@ -142,13 +142,13 @@ describe('ArticleUploader', () => {
             });
 
             it('should pass the resource path when uploading', () => {
-                const article = testUtils.createArticle({
+                const article = testUtils.createDummyArticle({
                     isChanged: true
                 });
                 const uploader = createUploader_(article);
 
                 article.resources = [
-                    testUtils.createResource({
+                    testUtils.createDummyResource({
                         isNew: true,
                         path: './test/test1.jpg'
                     })
@@ -162,15 +162,15 @@ describe('ArticleUploader', () => {
             });
 
             it('should upload all new resources', () => {
-                const article = testUtils.createArticle();
+                const article = testUtils.createDummyArticle();
                 const uploader = createUploader_(article);
 
                 article.resources = [
-                    testUtils.createResource({
+                    testUtils.createDummyResource({
                         isChanged: false,
                         isNew: true
                     }),
-                    testUtils.createResource({
+                    testUtils.createDummyResource({
                         isChanged: false,
                         isNew: true
                     })
@@ -184,15 +184,15 @@ describe('ArticleUploader', () => {
             });
 
             it('should upload all changed resources', () => {
-                const article = testUtils.createArticle();
+                const article = testUtils.createDummyArticle();
                 const uploader = createUploader_(article);
 
                 article.resources = [
-                    testUtils.createResource({
+                    testUtils.createDummyResource({
                         isChanged: true,
                         isNew: false
                     }),
-                    testUtils.createResource({
+                    testUtils.createDummyResource({
                         isChanged: true,
                         isNew: false
                     })
@@ -206,16 +206,16 @@ describe('ArticleUploader', () => {
             });
 
             it('should upload both new and changed resources at the same time', () => {
-                const article = testUtils.createArticle();
+                const article = testUtils.createDummyArticle();
                 const uploader = createUploader_(article);
 
                 article.resources = [
-                    testUtils.createResource({
+                    testUtils.createDummyResource({
                         path: 'test.jpg',
                         isChanged: true,
                         isNew: false
                     }),
-                    testUtils.createResource({
+                    testUtils.createDummyResource({
                         path: 'test2.jpg',
                         isChanged: false,
                         isNew: true
@@ -230,16 +230,16 @@ describe('ArticleUploader', () => {
             });
 
             it('should log create action for each created resource', () => {
-                const article = testUtils.createArticle();
+                const article = testUtils.createDummyArticle();
                 const uploader = createUploader_(article);
 
                 article.resources = [
-                    testUtils.createResource({
+                    testUtils.createDummyResource({
                         path: 'test.jpg',
                         isChanged: true,
                         isNew: false
                     }),
-                    testUtils.createResource({
+                    testUtils.createDummyResource({
                         path: 'test2.jpg',
                         isChanged: false,
                         isNew: true
@@ -255,16 +255,16 @@ describe('ArticleUploader', () => {
             });
 
             it('should not upload any resources if none are changed or new', () => {
-                const article = testUtils.createArticle();
+                const article = testUtils.createDummyArticle();
                 const uploader = createUploader_(article);
 
                 article.meta.resources = [
-                    testUtils.createResource({
+                    testUtils.createDummyResource({
                         path: 'test.jpg',
                         isChanged: false,
                         isNew: false
                     }),
-                    testUtils.createResource({
+                    testUtils.createDummyResource({
                         path: 'test2.jpg',
                         isChanged: false,
                         isNew: false
@@ -279,8 +279,8 @@ describe('ArticleUploader', () => {
             });
 
             it('should update the zendeskId after successful upload', () => {
-                const article = testUtils.createArticle({isChanged: true});
-                const resource = testUtils.createResource({isNew: true});
+                const article = testUtils.createDummyArticle({isChanged: true});
+                const resource = testUtils.createDummyResource({isNew: true});
                 const uploader = createUploader_(article);
 
                 article.resources = [
@@ -296,14 +296,14 @@ describe('ArticleUploader', () => {
             });
 
             it('should reject the promise if one of the uploads fails', () => {
-                const article = testUtils.createArticle({
+                const article = testUtils.createDummyArticle({
                     isChanged: true
                 });
                 const uploader = createUploader_(article);
 
                 article.resources = [
-                    testUtils.createResource({isNew: true}),
-                    testUtils.createResource({isNew: true})
+                    testUtils.createDummyResource({isNew: true}),
+                    testUtils.createDummyResource({isNew: true})
                 ];
                 zendeskClient.articleattachments.create.onSecondCall().rejects({error: 'error'});
 
@@ -312,8 +312,8 @@ describe('ArticleUploader', () => {
             });
 
             it('should write the article metadata after all resources were uploaded', () => {
-                const article = testUtils.createArticle({isChanged: true});
-                const resource = testUtils.createResource({isNew: true});
+                const article = testUtils.createDummyArticle({isChanged: true});
+                const resource = testUtils.createDummyResource({isNew: true});
                 const uploader = createUploader_(article);
 
                 article.resources = [resource];
@@ -330,7 +330,7 @@ describe('ArticleUploader', () => {
     describe('sync', () => {
         describe('article update', () => {
             it('should update the article if it has changed', () => {
-                const article = testUtils.createArticle({isChanged: true});
+                const article = testUtils.createDummyArticle({isChanged: true});
                 const uploader = createUploader_(article);
 
                 return uploader.sync()
@@ -341,7 +341,7 @@ describe('ArticleUploader', () => {
             });
 
             it('should log article update action if article changed', () => {
-                const article = testUtils.createArticle({isChanged: true, path: 'article/path'});
+                const article = testUtils.createDummyArticle({isChanged: true, path: 'article/path'});
                 const uploader = createUploader_(article);
 
                 return uploader.sync()
@@ -352,7 +352,7 @@ describe('ArticleUploader', () => {
             });
 
             it('should update the article for the correct zendeskId', () => {
-                const article = testUtils.createArticle({
+                const article = testUtils.createDummyArticle({
                     isChanged: true,
                     meta: {zendeskId: 12345}
                 });
@@ -366,7 +366,7 @@ describe('ArticleUploader', () => {
             });
 
             it('should not update the article if it has not changed', () => {
-                const article = testUtils.createArticle({isChanged: false});
+                const article = testUtils.createDummyArticle({isChanged: false});
                 const uploader = createUploader_(article);
 
                 return uploader.sync()
@@ -377,7 +377,7 @@ describe('ArticleUploader', () => {
             });
 
             it('should not log article update action if article was not changed', () => {
-                const article = testUtils.createArticle({isChanged: false});
+                const article = testUtils.createDummyArticle({isChanged: false});
                 const uploader = createUploader_(article);
 
                 return uploader.sync()
@@ -388,7 +388,7 @@ describe('ArticleUploader', () => {
             });
 
             it('should reject the promise when the article update API returns an error', () => {
-                const article = testUtils.createArticle({isChanged: true});
+                const article = testUtils.createDummyArticle({isChanged: true});
                 const uploader = createUploader_(article);
                 const error = new Error('error');
 
@@ -399,7 +399,7 @@ describe('ArticleUploader', () => {
             });
 
             it('should set the article `position` to the request if one is provided', () => {
-                const article = testUtils.createArticle({
+                const article = testUtils.createDummyArticle({
                     isChanged: true,
                     meta: {position: 42}
                 });
@@ -417,7 +417,7 @@ describe('ArticleUploader', () => {
             });
 
             it('should set `label_names` to the request property if labels are provided', () => {
-                const article = testUtils.createArticle({
+                const article = testUtils.createDummyArticle({
                     isChanged: true,
                     meta: {labels: ['test1', 'test2']}
                 });
@@ -435,10 +435,10 @@ describe('ArticleUploader', () => {
             });
 
             it('should set the section id to the request', () => {
-                const section = testUtils.createSection({
+                const section = testUtils.createDummySection({
                     meta: {zendeskId: 123456}
                 });
-                const article = testUtils.createArticle({
+                const article = testUtils.createDummyArticle({
                     isChanged: true,
                     section: section
                 });
@@ -458,7 +458,7 @@ describe('ArticleUploader', () => {
 
         describe('translations update', () => {
             it('should update the article translation if the article has changed', () => {
-                const article = testUtils.createArticle({isChanged: true});
+                const article = testUtils.createDummyArticle({isChanged: true});
                 const uploader = createUploader_(article);
 
                 return uploader.sync()
@@ -469,7 +469,7 @@ describe('ArticleUploader', () => {
             });
 
             it('should update the article translation for the correct zendeskId', () => {
-                const article = testUtils.createArticle({
+                const article = testUtils.createDummyArticle({
                     isChanged: true,
                     meta: {zendeskId: 12345}
                 });
@@ -483,7 +483,7 @@ describe('ArticleUploader', () => {
             });
 
             it('should not update the article translation if article has not changed', () => {
-                const article = testUtils.createArticle({isChanged: false});
+                const article = testUtils.createDummyArticle({isChanged: false});
                 const uploader = createUploader_(article);
 
                 return uploader.sync()
@@ -495,7 +495,7 @@ describe('ArticleUploader', () => {
 
 
             it('should reject the promise when the translations API returns an error', () => {
-                const article = testUtils.createArticle({isChanged: true});
+                const article = testUtils.createDummyArticle({isChanged: true});
                 const uploader = createUploader_(article);
                 const error = new Error('error');
 
@@ -506,7 +506,7 @@ describe('ArticleUploader', () => {
             });
 
             it('should update the translation for the correct locale', () => {
-                const article = testUtils.createArticle({
+                const article = testUtils.createDummyArticle({
                     isChanged: true,
                     meta: {locale: 'test-locale'}
                 });
@@ -520,7 +520,7 @@ describe('ArticleUploader', () => {
             });
 
             it('should set the locale to the request', () => {
-                const article = testUtils.createArticle({
+                const article = testUtils.createDummyArticle({
                     isChanged: true,
                     meta: {locale: 'test-locale'}
                 });
@@ -538,7 +538,7 @@ describe('ArticleUploader', () => {
             });
 
             it('should set the html to the request', () => {
-                const article = testUtils.createArticle({
+                const article = testUtils.createDummyArticle({
                     isChanged: true,
                     convertMarkdown: sinon.stub().resolves('<p>Lorem ipsum dolor sit amet</p>')
                 });
@@ -556,7 +556,7 @@ describe('ArticleUploader', () => {
             });
 
             it('should set the title to the request', () => {
-                const article = testUtils.createArticle({
+                const article = testUtils.createDummyArticle({
                     isChanged: true,
                     meta: {title: 'Test Title'}
                 });
@@ -576,7 +576,7 @@ describe('ArticleUploader', () => {
 
         describe('hash', () => {
             it('should update article hash after updating article if article was changed', () => {
-                const article = testUtils.createArticle({isChanged: true});
+                const article = testUtils.createDummyArticle({isChanged: true});
                 const uploader = createUploader_(article);
 
                 return uploader.sync()
@@ -586,7 +586,7 @@ describe('ArticleUploader', () => {
             });
 
             it('should reject if failed to update article hash', () => {
-                const article = testUtils.createArticle({isChanged: true});
+                const article = testUtils.createDummyArticle({isChanged: true});
                 const uploader = createUploader_(article);
                 const error = new Error('error');
 
@@ -598,7 +598,7 @@ describe('ArticleUploader', () => {
 
 
             it('should not update article hash if article has not been changed', () => {
-                const article = testUtils.createCategory({isChanged: false});
+                const article = testUtils.createDummyCategory({isChanged: false});
                 const uploader = createUploader_(article);
 
                 return uploader.sync()

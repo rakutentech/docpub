@@ -1,6 +1,6 @@
 const MarkdownIt = require('markdown-it');
-const Document = require('../../../lib/document');
 const linkReplacer = require('../../../lib/md-renderer/link-replacer');
+const createDocument = require('../test-utils').createDocument;
 
 describe('LinkReplacer', () => {
     it('should replace relative links with a link to the Zendesk article ID', () => {
@@ -52,7 +52,7 @@ describe('LinkReplacer', () => {
     });
 
     it('should not replace the link if findByPath returns `undefined`', () => {
-        const document = new Document('path');
+        const document = createDocument({path: 'path'});
         const renderer = createRenderer_(123456, document);
         document.findByPath.returns(undefined);
         const markdown = '[Link Text](../non-existent-path)';
@@ -75,7 +75,7 @@ describe('LinkReplacer', () => {
 });
 
 function createRenderer_(articleId, document) {
-    document = document || new Document('path');
+    document = document || createDocument();
     document.findByPath = sinon.stub().returns(articleId);
     const renderer = new MarkdownIt()
         .use(linkReplacer, document);

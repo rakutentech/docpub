@@ -1,5 +1,6 @@
 const highlight = require('../../../lib/md-renderer/highlight');
 const hljs = require('highlight.js');
+const logger = require('../../../lib/logger');
 
 describe('highlighter', () => {
     const sandbox = sinon.sandbox.create();
@@ -28,6 +29,17 @@ describe('highlighter', () => {
         const language = 'javascript';
 
         expect(highlight(code, language)).to.be.eql('');
+    });
+
+    it('should log a warning if exception occured during highlighting', () => {
+        sandbox.stub(hljs, 'highlight').throws(new Error());
+        sandbox.stub(logger, 'warn');
+
+        const code = 'function foo() {}';
+        const language = 'javascript';
+
+        highlight(code, language);
+        expect(logger.warn).to.be.calledWith(sinon.match('Highlight.js'));
     });
 
     it('should return highlighted string', () => {
