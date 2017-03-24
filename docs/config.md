@@ -25,7 +25,7 @@ to specify only a few settings specific for your project:
 
 * `token` (required, string) — access token of the user above.
 
-* `url` (required, string — fully qualified URL of your `ZenDesk` space. Please note, that this should
+* `url` (required, string) — fully qualified URL of your `ZenDesk` space. Please note, that this should
   be only base URL, path shall not be included. Example: `example.zendesk.com`
 
 ### Rendering settings
