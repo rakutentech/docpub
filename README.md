@@ -4,28 +4,46 @@
 [![Build Status](https://travis-ci.org/rakutentech/docpub.svg?branch=master)](https://travis-ci.org/rakutentech/docpub)
 [![Coverage Status](https://coveralls.io/repos/github/rakutentech/docpub/badge.svg)](https://coveralls.io/github/rakutentech/docpub)
 
-DocPub is a command line utility for converting a folder structure of markdown files to HTML and uploading the result to Zendesk.
+**DocPub** is a command line utility for converting a folder structure of markdown files to HTML and uploading the result to Zendesk.
 
 ## Getting Started
 
-1. Install the utility globally with `npm install -g docpub`
-2. Set environment variables for your Zendesk username, token, and url by running the following commands:
+### Installing
 
-    - `ZENDESK_API_USERNAME="{Your username}"`
-    - `ZENDESK_API_TOKEN="{Your API token}"`
-    - `ZENDESK_URL="{Your fully qualified Zendesk URL}"`
+To install the utility, use [npm](https://www.npmjs.org/) `install` command:
 
-You can alternative create an enviroment profile in your home directory. Using bash, add the variables to your `.bash_profile`, if there is no file, create it.
-
-```
-export ZENDESK_API_USERNAME="{Your username}"
-export ZENDESK_API_TOKEN="{Your API token}"
-export ZENDESK_URL="{Your fully qualified Zendesk URL}"
+```sh
+npm install -g docpub
 ```
 
-Then check that the variables are included with `env`.
+Global installation is used for launching commands.
 
-3. Run the command `docpub` from the directory that you wish to convert and upload.
+### Configuring
+
+**DocPub** is configured using a config file. The only supported config file format is `JSON`.
+By default, **DocPub** looks for the config in the root of documentation folder by `docpub.conf` name.
+If needed, specific config location may be set with `--config-path` CLI option. Please note, that
+this option accepts path to the file, not to the folder, where config is located
+
+The minimal config must include following required options:
+
+- `username` - name of ZenDesk user with documentation publish access rights
+- `token` - access token of the user above
+- `url` - fully qualified URL of your `ZenDesk` space
+
+Example:
+```javascript
+{
+    "username": "user@example.com"
+    "token": "abc123def456ghi789"
+    "url": "example.zendesk.com"
+}
+```
+Please see more about other configuration options and options overriding in [config](doc/config.md) section.
+
+### Running
+
+Run the command `docpub` from the directory that you wish to convert and upload.
 
 This will do the following:
 - Convert the contained markdown files to HTML
@@ -55,6 +73,5 @@ Tests are divided into unit tests and functional tests, and utilize [SinonJS](ht
 
 ### Precommit and Preversion Hooks
 
-[husky](https://github.com/typicode/husky) is used to provide hooks prior to committing and versioning. This will run the unit and functional tests as well as [ESLint](http://eslint.org/) to make sure that the code style is correct and has no syntax errors.
-
+[husky](https://github.com/typicode/husky) is used to provide hooks prior to committing and versioning. This will run linter for commits and linter + all tests for releases.
 If any of the tests fail to pass or any file doesn't meet the ESLint specifications, you will not be allowed to commit or version.
