@@ -1,10 +1,10 @@
 {
   "name": "docpub",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A script for publishing .md articles, stored in git repo, on ZenDesk",
-  "repository" : {
-    "type" : "git",
-    "url" : "https://github.com/rakutentech/docpub"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rakutentech/docpub"
   },
   "main": "index.js",
   "engines": {
