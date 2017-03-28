@@ -1,6 +1,6 @@
 # DocPub
 
-[![npm](https://img.shields.io/npm/v/docpub.svg?maxAge=2592000)](https://www.npmjs.com/package/docpub)
+[![npm](https://img.shields.io/npm/v/docpub.svg)](https://www.npmjs.com/package/docpub)
 [![Build Status](https://travis-ci.org/rakutentech/docpub.svg?branch=master)](https://travis-ci.org/rakutentech/docpub)
 [![Coverage Status](https://coveralls.io/repos/github/rakutentech/docpub/badge.svg)](https://coveralls.io/github/rakutentech/docpub)
 
